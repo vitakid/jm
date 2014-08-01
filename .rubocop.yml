@@ -4,3 +4,6 @@ StringLiterals:
 
 UnusedMethodArgument:
   Enabled: false
+
+TrivialAccessors:
+  Enabled: false
