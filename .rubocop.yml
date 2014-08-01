@@ -1,0 +1,3 @@
+# Strings have to be enclosed in double quotes
+StringLiterals:
+  EnforcedStyle: double_quotes
