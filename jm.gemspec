@@ -1,15 +1,15 @@
 # coding: utf-8
-lib = File.expand_path('../lib', __FILE__)
+lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'jm/version'
+require "jm/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "jm"
   spec.version       = JM::VERSION
   spec.authors       = ["Marten Lienen"]
   spec.email         = ["marten.lienen@gmail.com"]
-  spec.summary       = %q{Bidirectional JSON mapping}
-  spec.description   = %q{}
+  spec.summary       = "Bidirectional JSON mapping"
+  spec.description   = ""
   spec.homepage      = "https://github.com/CQQL/jm"
   spec.license       = "MIT"
 
