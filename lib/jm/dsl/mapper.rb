@@ -1,14 +1,27 @@
 module JM
   module DSL
+    # A DSL for composing custom mappers
+    #
+    # You are supposed to subclass this class and configure your mapper with the
+    # available configuration methods.
     class Mapper < JM::Mapper
-      def self.property(name)
+      # Add an arbitrary mapper
+      def self.mapper(mapper)
         @mappers ||= []
 
-        @mappers << JM::Mappers::PropertyMapper.new(name)
+        @mappers << mapper
+      end
+
+      def self.property(name)
+        mapper(JM::Mappers::PropertyMapper.new(name))
+      end
+
+      def self.mappers
+        @mappers
       end
 
       def mappers
-        self.class.instance_variable_get(:@mappers)
+        self.class.mappers
       end
 
       def read(object)
