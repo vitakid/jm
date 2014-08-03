@@ -38,22 +38,26 @@ module JM
       end
 
       def write(object)
-        pipes.each_with_object(instantiate_target) do |pipe, hash|
-          pipe.pipe(object, hash)
+        target = instantiate_target(object)
+
+        pipes.each_with_object(target) do |pipe, t|
+          pipe.pipe(object, t)
         end
       end
 
-      def read(hash)
-        pipes.each_with_object(instantiate_source) do |pipe, obj|
-          pipe.unpipe(obj, hash)
+      def read(target)
+        source = instantiate_source(target)
+
+        pipes.each_with_object(source) do |pipe, s|
+          pipe.unpipe(s, target)
         end
       end
 
-      def instantiate_source
+      def instantiate_source(target)
         @source_class.new
       end
 
-      def instantiate_target
+      def instantiate_target(source)
         @target_class.new
       end
     end

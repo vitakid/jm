@@ -93,7 +93,24 @@ describe JM::DSL::Mapper do
       end
     end
   end
-
-  context "when composing custom mappers" do
-  end
 end
+
+# class RecipeMapper < HALMapper
+#   link :self do
+#     def write(recipe)
+#       Addressable::Template.new("/recipes/#{recipe.id}").to_s
+#     end
+
+#     def read(link)
+#       id = template.extract(link.href)[:id]
+
+#       Recipe.find(id)
+#     end
+#   end
+
+#   link :food, mapper: FoodMapper.new, embedded: true
+
+#   property :name
+
+#   array :ingredients, mapper: IngredientMapper.new
+# end
