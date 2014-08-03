@@ -11,3 +11,10 @@ TrivialAccessors:
 # Allow %r{} syntax
 RegexpLiteral:
   Enabled: false
+
+GuardClause:
+  Enabled: false
+
+# I find modifiers not to be worth it most of the time
+IfUnlessModifier:
+  Enabled: false
