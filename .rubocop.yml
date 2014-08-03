@@ -7,3 +7,7 @@ UnusedMethodArgument:
 
 TrivialAccessors:
   Enabled: false
+
+# Allow %r{} syntax
+RegexpLiteral:
+  Enabled: false
