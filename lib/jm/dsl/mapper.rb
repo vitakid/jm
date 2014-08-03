@@ -16,17 +16,16 @@ module JM
       end
 
       def self.property(name, **args)
-        source_accessor = Accessors::AccessorAccessor.new(name)
-        target_accessor = Accessors::HashKeyAccessor.new(name)
+        args[:source_accessor] ||= Accessors::AccessorAccessor.new(name)
+        args[:target_accessor] ||= Accessors::HashKeyAccessor.new(name)
 
-        p = JM::Pipes::CompositePipe.new(source_accessor: source_accessor,
-                                         target_accessor: target_accessor)
+        p = JM::Pipes::CompositePipe.new(**args)
 
         pipe(p)
       end
 
-      def self.array(name, serializer)
-        property(name, serializer: JM::Mappers::ArrayMapper.new(serializer))
+      def self.array(name, mapper)
+        property(name, mapper: JM::Mappers::ArrayMapper.new(mapper))
       end
 
       def initialize(source_class, target_class)
