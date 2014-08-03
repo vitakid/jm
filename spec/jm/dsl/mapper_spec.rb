@@ -1,24 +1,40 @@
 describe JM::DSL::Mapper do
-  let(:mapper) do
-    Class.new(JM::DSL::Mapper) do
-      property :first_name
-      property :last_name
-    end.new
-  end
+  context "when mapping simple properties" do
+    let(:mapper) do
+      person_class = person
 
-  let(:class) do
-    Struct.new(:first_name, :last_name)
-  end
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(person_class, Hash)
+        end
 
-  let(:person) do
-    self.class.new("Marten", "Lienen")
-  end
+        property :first_name
+        property :last_name
+      end
+    end
 
-  context "when mapping to a hash" do
-    it "should map properties to keys" do
-      hash = mapper.read(person)
+    let(:person) do
+      Struct.new(:first_name, :last_name)
+    end
 
-      expect(hash).to eq(first_name: "Marten", last_name: "Lienen")
+    context "when mapping to a hash" do
+      it "should map properties to keys" do
+        p = person.new("Marten", "Lienen")
+
+        hash = mapper.new.write(p)
+
+        expect(hash).to eq(first_name: "Marten", last_name: "Lienen")
+      end
+    end
+
+    context "when mapping from a hash" do
+      it "should map keys to properties" do
+        hash = { first_name: "Marten", last_name: "Lienen" }
+
+        p = mapper.new.read(hash)
+
+        expect(p).to eq(person.new("Marten", "Lienen"))
+      end
     end
   end
 

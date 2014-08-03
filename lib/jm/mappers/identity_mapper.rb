@@ -1,17 +1,15 @@
-require "jm/mapper"
-
 module JM
   module Mappers
-    # A mapper, that does nothing
+    # A mapper that maps everything to itself
     #
-    # This is intended to be used as a default value in positions where a
-    # {Mapper} is required.
+    # This is supposed to be used as a default value in places, where a mapper
+    # is expected.
     class IdentityMapper < Mapper
-      def read(object, data)
-        data
+      def read(object)
+        object
       end
 
-      def write(object, data)
+      def write(object)
         object
       end
     end

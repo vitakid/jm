@@ -5,35 +5,57 @@ module JM
     # You are supposed to subclass this class and configure your mapper with the
     # available configuration methods.
     class Mapper < JM::Mapper
-      # Add an arbitrary mapper
-      def self.mapper(mapper)
-        @mappers ||= []
+      def self.pipe(pipe)
+        @pipes ||= []
 
-        @mappers << mapper
+        @pipes << pipe
       end
 
-      def self.property(name)
-        mapper(JM::Mappers::PropertyMapper.new(name))
+      def self.pipes
+        @pipes
       end
 
-      def self.mappers
-        @mappers
+      def self.property(name, **args)
+        source_accessor = Accessors::AccessorAccessor.new(name)
+        target_accessor = Accessors::HashKeyAccessor.new(name)
+
+        p = JM::Pipes::CompositePipe.new(source_accessor: source_accessor,
+                                         target_accessor: target_accessor)
+
+        pipe(p)
       end
 
-      def mappers
-        self.class.mappers
+      def self.array(name, serializer)
+        property(name, serializer: JM::Mappers::ArrayMapper.new(serializer))
       end
 
-      def read(object)
-        mappers.reduce({}) do |hash, mapper|
-          mapper.read(object, hash)
+      def initialize(source_class, target_class)
+        @source_class = source_class
+        @target_class = target_class
+      end
+
+      def pipes
+        self.class.pipes
+      end
+
+      def write(object)
+        pipes.each_with_object(instantiate_target) do |pipe, hash|
+          pipe.pipe(object, hash)
         end
       end
 
-      def write(object, data)
-        mappers.reduce(object) do |obj, mapper|
-          mapper.write(obj, data)
+      def read(hash)
+        pipes.each_with_object(instantiate_source) do |pipe, obj|
+          pipe.unpipe(obj, hash)
         end
+      end
+
+      def instantiate_source
+        @source_class.new
+      end
+
+      def instantiate_target
+        @target_class.new
       end
     end
   end

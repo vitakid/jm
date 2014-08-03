@@ -3,14 +3,16 @@ module JM
   #
   # Mathematically speaking a {Mapper} is a bijection.
   class Mapper
-    # Read data from object
-    def read(object, data)
+    # Read data back in as object
+    #
+    # @return [Object] The parsed object representation of data
+    def read(data)
     end
 
-    # Write data back to object
+    # Write object out as data
     #
-    # @return object [Object] The updated object
-    def write(object, data)
+    # @return [Object] The serialized representation of object
+    def write(object)
     end
   end
 end
