@@ -2,8 +2,21 @@ module JM
   module DSL
     # Extended DSL for HAL mapping
     class HALMapper < DSL::Mapper
-      def self.inline_link(rel, uri_template, params_accessor: nil, &block)
+      def self.link(rel, template_or_mapper, **args, &block)
+        if template_or_mapper.is_a?(String)
+          inline_link(rel, template_or_mapper, **args, &block)
+        else
+          mapper_link(rel, template_or_mapper, **args, &block)
+        end
+      end
+
+      def self.inline_link(rel,
+                           uri_template,
+                           params_accessor:
+                             TemplateParamsAccessor.new(uri_template),
+                           &block)
         params_accessor = accessor_or_die(params_accessor, &block)
+
         link_mapper = HAL::LinkMapper.new(uri_template)
         link_accessor = HAL::LinkAccessor.new(rel)
 
@@ -18,7 +31,7 @@ module JM
         end
       end
 
-      def self.link(rel, mapper, accessor: nil, &block)
+      def self.mapper_link(rel, mapper, accessor: nil, &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = SelfLinkMapper.new(mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
@@ -43,14 +56,14 @@ module JM
       end
 
       def self.accessor_or_die(accessor, &block)
-        if accessor.nil?
-          if block.nil?
+        if block
+          block_to_accessor(&block)
+        else
+          if accessor.nil?
             raise JM::Exception.new("You have to supply some form of accessor")
           else
-            block_to_accessor(&block)
+            accessor
           end
-        else
-          accessor
         end
       end
 

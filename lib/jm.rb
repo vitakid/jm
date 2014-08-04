@@ -18,6 +18,7 @@ require "jm/hal/link_accessor"
 
 require "jm/dsl/mapper"
 require "jm/dsl/self_link_mapper"
+require "jm/dsl/template_params_accessor"
 require "jm/dsl/hal_mapper"
 
 require "jm/version"

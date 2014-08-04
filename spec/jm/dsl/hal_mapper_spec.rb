@@ -11,15 +11,7 @@ describe JM::DSL::HALMapper do
         super(pet)
       end
 
-      inline_link :self, "/pets/{name}" do
-        def set(pet, params)
-          pet.name = params["name"]
-        end
-
-        def get(pet)
-          { name: pet.name }
-        end
-      end
+      link :self, "/pets/{name}"
 
       property :name
     end
@@ -38,7 +30,7 @@ describe JM::DSL::HALMapper do
           super(person)
         end
 
-        inline_link :self, "/people/{name}" do
+        link :self, "/people/{name}" do
           define_method(:set) do |p, params|
             first_name, last_name = params["name"].split("-")
 
@@ -180,15 +172,7 @@ describe JM::DSL::HALMapper do
           super(person)
         end
 
-        inline_link :self, "/people/{name}" do
-          def set(person, params)
-            person.name = params["name"]
-          end
-
-          def get(person)
-            { name: person.name }
-          end
-        end
+        link :self, "/people/{name}"
 
         link :pet,
              pet_m.new,
