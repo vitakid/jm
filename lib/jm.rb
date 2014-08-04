@@ -1,3 +1,5 @@
+require "jm/exception"
+
 require "jm/mapper"
 require "jm/mappers/identity_mapper"
 require "jm/mappers/array_mapper"
@@ -15,7 +17,7 @@ require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"
 
 require "jm/dsl/mapper"
-require "jm/dsl/self_link_proxy_accessor"
+require "jm/dsl/self_link_mapper"
 require "jm/dsl/hal_mapper"
 
 require "jm/version"

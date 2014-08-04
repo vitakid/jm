@@ -2,6 +2,7 @@ require "addressable/template"
 
 module JM
   module HAL
+    # Map parameter hashes onto URI via URI templates
     class LinkMapper < Mapper
       def initialize(uri_template)
         @uri_template = Addressable::Template.new(uri_template)

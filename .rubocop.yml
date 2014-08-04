@@ -18,3 +18,13 @@ GuardClause:
 # I find modifiers not to be worth it most of the time
 IfUnlessModifier:
   Enabled: false
+
+# Hard limits are bad
+MethodLength:
+  Enabled: false
+
+RaiseArgs:
+  Enabled: false
+
+SignalException:
+  Enabled: false

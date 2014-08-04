@@ -8,7 +8,7 @@ describe JM::DSL::HALMapper do
 
     Class.new(JM::DSL::HALMapper) do
       define_method(:initialize) do
-        super(pet, Hash)
+        super(pet)
       end
 
       inline_link :self, "/pets/{name}" do
@@ -35,15 +35,15 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(person)
         end
 
         inline_link :self, "/people/{name}" do
-          define_method(:set) do |person, params|
+          define_method(:set) do |p, params|
             first_name, last_name = params["name"].split("-")
 
-            person.first_name = first_name.capitalize
-            person.last_name = last_name.capitalize
+            p.first_name = first_name.capitalize
+            p.last_name = last_name.capitalize
           end
 
           def get(person)
@@ -86,7 +86,7 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(person)
         end
 
         property :age
@@ -120,13 +120,12 @@ describe JM::DSL::HALMapper do
     end
 
     let(:person_mapper) do
-      pet = pet_class
       pet_m = pet_mapper
       person = person_class
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(person)
         end
 
         link :pet, pet_m.new do
@@ -178,7 +177,7 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(person)
         end
 
         inline_link :self, "/people/{name}" do
@@ -204,18 +203,63 @@ describe JM::DSL::HALMapper do
         hash = person_mapper.new.write(person)
 
         expect(hash).to eq(_links: { self: { href: "/people/Marten" },
-                                     pet: { href: "/pets/Ronja" }})
+                                     pet: { href: "/pets/Ronja" } })
       end
     end
 
     context "from a hash" do
       it "should parse both links" do
         hash = { _links: { self: { href: "/people/Marten" },
-                           pet: { href: "/pets/Ronja" }} }
+                           pet: { href: "/pets/Ronja" } } }
 
         person = person_mapper.new.read(hash)
 
         expect(person).to eq(person_class.new("Marten", pet_class.new("Ronja")))
+      end
+    end
+  end
+
+  context "when mapping an array of links" do
+    let(:person_class) do
+      Struct.new(:name, :pets)
+    end
+
+    let(:person_mapper) do
+      person = person_class
+      pet_m = pet_mapper
+
+      Class.new(JM::DSL::HALMapper) do
+        define_method(:initialize) do
+          super(person)
+        end
+
+        links :pet,
+              pet_m.new,
+              accessor: JM::Accessors::AccessorAccessor.new(:pets)
+      end
+    end
+
+    context "to a hash" do
+      it "should generate a HAL link array" do
+        person = person_class.new("Marten", [pet_class.new("Finchen"),
+                                             pet_class.new("Ronja")])
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(_links: { pet: [{ href: "/pets/Finchen" },
+                                           { href: "/pets/Ronja" }] })
+      end
+    end
+
+    context "from a hash" do
+      it "should map all links to objects" do
+        hash = { _links: { pet: [{ href: "/pets/Finchen" },
+                                 { href: "/pets/Ronja" }] } }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new(nil, [pet_class.new("Finchen"),
+                                                    pet_class.new("Ronja")]))
       end
     end
   end

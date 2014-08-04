@@ -1,8 +1,9 @@
 module JM
   module DSL
+    # Extended DSL for HAL mapping
     class HALMapper < DSL::Mapper
-      def self.inline_link(rel, uri_template, &block)
-        params_accessor = block_to_accessor(&block)
+      def self.inline_link(rel, uri_template, params_accessor: nil, &block)
+        params_accessor = accessor_or_die(params_accessor, &block)
         link_mapper = HAL::LinkMapper.new(uri_template)
         link_accessor = HAL::LinkAccessor.new(rel)
 
@@ -18,17 +19,39 @@ module JM
       end
 
       def self.link(rel, mapper, accessor: nil, &block)
-        if accessor.nil?
-          accessor = block_to_accessor(&block)
-        end
-
-        proxy_accessor = SelfLinkProxyAccessor.new(mapper, accessor, rel)
+        accessor = accessor_or_die(accessor, &block)
+        mapper = SelfLinkMapper.new(mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
 
-        p = Pipes::CompositePipe.new(source_accessor: proxy_accessor,
+        p = Pipes::CompositePipe.new(source_accessor: accessor,
+                                     mapper: mapper,
                                      target_accessor: link_accessor)
 
         pipe(p)
+      end
+
+      def self.links(rel, mapper, accessor: nil, &block)
+        accessor = accessor_or_die(accessor, &block)
+        mapper = Mappers::ArrayMapper.new(SelfLinkMapper.new(mapper))
+        link_accessor = HAL::LinkAccessor.new(rel)
+
+        p = Pipes::CompositePipe.new(source_accessor: accessor,
+                                     mapper: mapper,
+                                     target_accessor: link_accessor)
+
+        pipe(p)
+      end
+
+      def self.accessor_or_die(accessor, &block)
+        if accessor.nil?
+          if block.nil?
+            raise JM::Exception.new("You have to supply some form of accessor")
+          else
+            block_to_accessor(&block)
+          end
+        else
+          accessor
+        end
       end
 
       def self.block_to_accessor(&block)
@@ -44,6 +67,10 @@ module JM
 
       def self.self_link_pipe=(pipe)
         @self_link_pipe = pipe
+      end
+
+      def initialize(source_class)
+        super(source_class, Hash)
       end
 
       def self_link_pipe

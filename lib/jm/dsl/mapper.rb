@@ -12,7 +12,7 @@ module JM
       end
 
       def self.pipes
-        @pipes
+        @pipes || []
       end
 
       def self.property(name, **args)
