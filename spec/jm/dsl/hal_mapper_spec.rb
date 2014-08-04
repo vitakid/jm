@@ -1,4 +1,30 @@
 describe JM::DSL::HALMapper do
+  let(:pet_class) do
+    Struct.new(:name)
+  end
+
+  let(:pet_mapper) do
+    pet = pet_class
+
+    Class.new(JM::DSL::HALMapper) do
+      define_method(:initialize) do
+        super(pet, Hash)
+      end
+
+      inline_link :self, "/pets/{name}" do
+        def set(pet, params)
+          pet.name = params["name"]
+        end
+
+        def get(pet)
+          { name: pet.name }
+        end
+      end
+
+      property :name
+    end
+  end
+
   let(:person_class) do
     Struct.new(:first_name, :last_name, :age)
   end
@@ -12,14 +38,15 @@ describe JM::DSL::HALMapper do
           super(person, Hash)
         end
 
-        link :self, "/people/{name}" do
-          define_method(:read) do |params|
+        inline_link :self, "/people/{name}" do
+          define_method(:set) do |person, params|
             first_name, last_name = params["name"].split("-")
 
-            person.new(first_name.capitalize, last_name.capitalize)
+            person.first_name = first_name.capitalize
+            person.last_name = last_name.capitalize
           end
 
-          def write(person)
+          def get(person)
             name = "#{person.first_name.downcase}-#{person.last_name.downcase}"
 
             { name: name }
@@ -83,6 +110,112 @@ describe JM::DSL::HALMapper do
         person = mapper_class.new.read(hash)
 
         expect(person).to eq(person_class.new(nil, nil, 21))
+      end
+    end
+  end
+
+  context "when linking to another 'self' linked entity" do
+    let(:person_class) do
+      Struct.new(:name, :pet)
+    end
+
+    let(:person_mapper) do
+      pet = pet_class
+      pet_m = pet_mapper
+      person = person_class
+
+      Class.new(JM::DSL::HALMapper) do
+        define_method(:initialize) do
+          super(person, Hash)
+        end
+
+        link :pet, pet_m.new do
+          def set(person, pet)
+            person.pet = pet
+          end
+
+          def get(person)
+            person.pet
+          end
+        end
+
+        property :name
+      end
+    end
+
+    context "and mapping to a hash" do
+      it "should use the mapper's 'self' link pipe" do
+        person = person_class.new("Frodo", pet_class.new("Finchen"))
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(_links: { pet: { href: "/pets/Finchen" } },
+                           name: "Frodo")
+      end
+    end
+
+    context "and mapping from a hash" do
+      it "should instantiate the object from the link" do
+        hash = { _links: { pet: { href: "/pets/Finchen" } },
+                 name: "Frodo" }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("Frodo",
+                                              pet_class.new("Finchen")))
+      end
+    end
+  end
+
+  context "when mapping a 'self' as well as another link" do
+    let(:person_class) do
+      Struct.new(:name, :pet)
+    end
+
+    let(:person_mapper) do
+      pet_m = pet_mapper
+      person = person_class
+
+      Class.new(JM::DSL::HALMapper) do
+        define_method(:initialize) do
+          super(person, Hash)
+        end
+
+        inline_link :self, "/people/{name}" do
+          def set(person, params)
+            person.name = params["name"]
+          end
+
+          def get(person)
+            { name: person.name }
+          end
+        end
+
+        link :pet,
+             pet_m.new,
+             accessor: JM::Accessors::AccessorAccessor.new(:pet)
+      end
+    end
+
+    context "to a hash" do
+      it "should create both links" do
+        person = person_class.new("Marten", pet_class.new("Ronja"))
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(_links: { self: { href: "/people/Marten" },
+                                     pet: { href: "/pets/Ronja" }})
+      end
+    end
+
+    context "from a hash" do
+      it "should parse both links" do
+        hash = { _links: { self: { href: "/people/Marten" },
+                           pet: { href: "/pets/Ronja" }} }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("Marten", pet_class.new("Ronja")))
       end
     end
   end

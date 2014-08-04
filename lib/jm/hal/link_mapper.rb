@@ -3,19 +3,15 @@ require "addressable/template"
 module JM
   module HAL
     class LinkMapper < Mapper
-      def initialize(uri_template, params_mapper)
+      def initialize(uri_template)
         @uri_template = Addressable::Template.new(uri_template)
-        @params_mapper = params_mapper
       end
 
       def read(link)
-        params = @uri_template.extract(link[:href])
-
-        @params_mapper.read(params)
+        @uri_template.extract(link[:href])
       end
 
-      def write(object)
-        params = @params_mapper.write(object)
+      def write(params)
         href = @uri_template.expand(params).to_s
 
         { href: href }

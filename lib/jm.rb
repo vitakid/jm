@@ -15,6 +15,7 @@ require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"
 
 require "jm/dsl/mapper"
+require "jm/dsl/self_link_proxy_accessor"
 require "jm/dsl/hal_mapper"
 
 require "jm/version"
