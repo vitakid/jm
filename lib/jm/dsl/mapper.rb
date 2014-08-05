@@ -5,8 +5,20 @@ module JM
     # You are supposed to subclass this class and configure your mapper with the
     # available configuration methods.
     class Mapper < JM::Mapper
-      def self.pipe(pipe)
+      def self.pipe(pipe, read_only: false, write_if: nil, read_if: nil)
         @pipes ||= []
+
+        if read_only
+          pipe = Pipes::ReadOnlyPipe.new(pipe)
+        end
+
+        if write_if
+          pipe = Pipes::ConditionalWritePipe.new(pipe, write_if)
+        end
+
+        if read_if
+          pipe = Pipes::ConditionalReadPipe.new(pipe, read_if)
+        end
 
         @pipes << pipe
       end
@@ -17,10 +29,8 @@ module JM
 
       def self.property(name,
                         accessor: Accessors::AccessorAccessor.new(name),
-                        read_only: false,
                         mapper: nil,
-                        write_if: nil,
-                        read_if: nil,
+                        **rest,
                         &block)
         if block
           accessor_class = Class.new(Accessor)
@@ -39,19 +49,7 @@ module JM
 
         p = Pipes::CompositePipe.new(**args)
 
-        if read_only
-          p = Pipes::ReadOnlyPipe.new(p)
-        end
-
-        if write_if
-          p = Pipes::ConditionalWritePipe.new(p, write_if)
-        end
-
-        if read_if
-          p = Pipes::ConditionalReadPipe.new(p, read_if)
-        end
-
-        pipe(p)
+        pipe(p, **rest)
       end
 
       def self.read_only_property(name, **args, &block)
@@ -69,8 +67,10 @@ module JM
         property(name, **args)
       end
 
-      def self.array(name, mapper)
-        property(name, mapper: JM::Mappers::ArrayMapper.new(mapper))
+      def self.array(name, mapper, **args)
+        args[:mapper] = JM::Mappers::ArrayMapper.new(mapper)
+
+        property(name, **args)
       end
 
       def initialize(source_class, target_class)

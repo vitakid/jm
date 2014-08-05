@@ -14,6 +14,7 @@ module JM
                            uri_template,
                            params_accessor:
                              TemplateParamsAccessor.new(uri_template),
+                           **args,
                            &block)
         params_accessor = accessor_or_die(params_accessor, &block)
 
@@ -27,11 +28,11 @@ module JM
         if rel == :self
           self.self_link_pipe = p
         else
-          pipe(p)
+          pipe(p, **args)
         end
       end
 
-      def self.mapper_link(rel, mapper, accessor: nil, &block)
+      def self.mapper_link(rel, mapper, accessor: nil, **args, &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = SelfLinkMapper.new(mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
@@ -40,10 +41,10 @@ module JM
                                      mapper: mapper,
                                      target_accessor: link_accessor)
 
-        pipe(p)
+        pipe(p, **args)
       end
 
-      def self.links(rel, mapper, accessor: nil, &block)
+      def self.links(rel, mapper, accessor: nil, **args, &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = Mappers::ArrayMapper.new(SelfLinkMapper.new(mapper))
         link_accessor = HAL::LinkAccessor.new(rel)
@@ -52,7 +53,7 @@ module JM
                                      mapper: mapper,
                                      target_accessor: link_accessor)
 
-        pipe(p)
+        pipe(p, **args)
       end
 
       def self.embedded(rel,
@@ -72,6 +73,7 @@ module JM
       def self.embeddeds(rel,
                          mapper,
                          accessor: Accessors::AccessorAccessor.new(rel),
+                         **args,
                          &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = Mappers::ArrayMapper.new(mapper)
@@ -81,7 +83,7 @@ module JM
                                      mapper: mapper,
                                      target_accessor: embedded_accessor)
 
-        pipe(p)
+        pipe(p, **args)
       end
 
       def self.accessor_or_die(accessor, &block)
