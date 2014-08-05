@@ -36,7 +36,12 @@ module JM
         end
       end
 
-      def mapper_link(rel, mapper, accessor: nil, **args, &block)
+      def mapper_link(rel,
+                      mapper,
+                      accessor:
+                        Accessors::AccessorAccessor.new(rel),
+                      **args,
+                      &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = SelfLinkMapper.new(mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
