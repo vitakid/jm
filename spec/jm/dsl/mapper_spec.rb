@@ -74,6 +74,55 @@ describe JM::DSL::Mapper do
     end
   end
 
+  context "when mapping a complex property with an inline accessor" do
+    let(:person_class) do
+      Struct.new(:name, :age)
+    end
+
+    let(:person_mapper) do
+      person = person_class
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(person, Hash)
+        end
+
+        property :name do
+          def get(person)
+            "#{person.name} (#{person.age})"
+          end
+
+          def set(person, value)
+            name, age = /(.+) \(([0-9]+)\)/.match(value).captures
+
+            person.name = name
+            person.age = age.to_i
+          end
+        end
+      end
+    end
+
+    context "to a hash" do
+      it "should use the inline accessor" do
+        person = person_class.new("James", 49)
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(name: "James (49)")
+      end
+    end
+
+    context "from a hash" do
+      it "should use the inline accessor" do
+        hash = { name: "James (49)" }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("James", 49))
+      end
+    end
+  end
+
   context "when mapping arrays" do
     let(:person_mapper) do
       person_class = person

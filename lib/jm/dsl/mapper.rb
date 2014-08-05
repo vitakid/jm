@@ -18,7 +18,14 @@ module JM
       def self.property(name,
                         accessor: Accessors::AccessorAccessor.new(name),
                         read_only: false,
-                        mapper: nil)
+                        mapper: nil,
+                        &block)
+        if block
+          accessor_class = Class.new(Accessor)
+          accessor_class.class_eval(&block)
+          accessor = accessor_class.new
+        end
+
         args = {
           source_accessor: accessor,
           target_accessor: Accessors::HashKeyAccessor.new(name)
