@@ -247,4 +247,57 @@ describe JM::DSL::HALMapper do
       end
     end
   end
+
+  context "when mapping an embedded resource" do
+    let(:person_class) do
+      Struct.new(:name, :pet)
+    end
+
+    let(:person_mapper) do
+      pet_m = pet_mapper
+      person = person_class
+
+      Class.new(JM::DSL::HALMapper) do
+        define_method(:initialize) do
+          super(person)
+        end
+
+        embedded :pet, pet_m.new
+
+        property :name
+      end
+    end
+
+    context "to a hash" do
+      it "should embed the pet" do
+        person = person_class.new("Marten", pet_class.new("Finchen"))
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(_embedded: {
+                             pet: {
+                               _links: { self: { href: "/pets/Finchen" } },
+                               name: "Finchen"
+                             }
+                           },
+                           name: "Marten")
+      end
+    end
+
+    context "from a hash" do
+      it "should read the embedded pet" do
+        hash = { _embedded: {
+                   pet: {
+                     _links: { self: { href: "/pets/Finchen" } },
+                     name: "Finchen"
+                   }
+                 },
+                 name: "Marten" }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("Marten", pet_class.new("Finchen")))
+      end
+    end
+  end
 end

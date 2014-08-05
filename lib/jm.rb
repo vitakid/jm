@@ -16,6 +16,7 @@ require "jm/pipes/read_only_pipe"
 
 require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"
+require "jm/hal/embedded_accessor"
 
 require "jm/dsl/mapper"
 require "jm/dsl/self_link_mapper"
