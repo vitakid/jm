@@ -15,11 +15,24 @@ module JM
         @pipes || []
       end
 
-      def self.property(name, **args)
-        args[:source_accessor] ||= Accessors::AccessorAccessor.new(name)
-        args[:target_accessor] ||= Accessors::HashKeyAccessor.new(name)
+      def self.property(name,
+                        accessor: Accessors::AccessorAccessor.new(name),
+                        read_only: false,
+                        mapper: nil)
+        args = {
+          source_accessor: accessor,
+          target_accessor: Accessors::HashKeyAccessor.new(name)
+        }
 
-        p = JM::Pipes::CompositePipe.new(**args)
+        if mapper
+          args[:mapper] = mapper
+        end
+
+        p = Pipes::CompositePipe.new(**args)
+
+        if read_only
+          p = Pipes::ReadOnlyPipe.new(p)
+        end
 
         pipe(p)
       end

@@ -38,6 +38,42 @@ describe JM::DSL::Mapper do
     end
   end
 
+  context "when mapping a readonly property" do
+    let(:person_class) do
+      Struct.new(:name, :age)
+    end
+
+    let(:person_mapper) do
+      person = person_class
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(person, Hash)
+        end
+
+        property :name
+
+        property :age, read_only: true
+      end
+    end
+
+    it "should write the property" do
+      person = person_class.new("Frodo", 50)
+
+      hash = person_mapper.new.write(person)
+
+      expect(hash).to eq(name: "Frodo", age: 50)
+    end
+
+    it "should not read the property" do
+      hash = { name: "Frodo", age: 50 }
+
+      person = person_mapper.new.read(hash)
+
+      expect(person).to eq(person_class.new("Frodo", nil))
+    end
+  end
+
   context "when mapping arrays" do
     let(:person_mapper) do
       person_class = person
@@ -94,23 +130,3 @@ describe JM::DSL::Mapper do
     end
   end
 end
-
-# class RecipeMapper < HALMapper
-#   link :self do
-#     def write(recipe)
-#       Addressable::Template.new("/recipes/#{recipe.id}").to_s
-#     end
-
-#     def read(link)
-#       id = template.extract(link.href)[:id]
-
-#       Recipe.find(id)
-#     end
-#   end
-
-#   link :food, mapper: FoodMapper.new, embedded: true
-
-#   property :name
-
-#   array :ingredients, mapper: IngredientMapper.new
-# end

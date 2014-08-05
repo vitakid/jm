@@ -12,6 +12,7 @@ require "jm/accessors/hash_key_accessor"
 
 require "jm/pipe"
 require "jm/pipes/composite_pipe"
+require "jm/pipes/read_only_pipe"
 
 require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"
