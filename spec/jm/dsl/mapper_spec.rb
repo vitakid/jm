@@ -38,7 +38,7 @@ describe JM::DSL::Mapper do
     end
   end
 
-  context "when mapping a readonly property" do
+  context "when mapping a read-only property" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -71,6 +71,42 @@ describe JM::DSL::Mapper do
       person = person_mapper.new.read(hash)
 
       expect(person).to eq(person_class.new("Frodo", nil))
+    end
+  end
+
+  context "when using the #read_only_property shorthand" do
+    let(:person_class) do
+      Struct.new(:name, :age)
+    end
+
+    let(:person_mapper) do
+      person = person_class
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(person, Hash)
+        end
+
+        read_only_property :name do |p|
+          "#{p.name}, #{p.age}"
+        end
+      end
+    end
+
+    it "should write normally" do
+      person = person_class.new("Marten", 21)
+
+      hash = person_mapper.new.write(person)
+
+      expect(hash).to eq(name: "Marten, 21")
+    end
+
+    it "should be read-only" do
+      hash = { name: "Marten, 21" }
+
+      person = person_mapper.new.read(hash)
+
+      expect(person).to eq(person_class.new(nil, nil))
     end
   end
 

@@ -44,6 +44,21 @@ module JM
         pipe(p)
       end
 
+      def self.read_only_property(name, **args, &block)
+        accessor_class = Class.new(Accessor) do
+          define_method(:get) do |object|
+            block.call(object)
+          end
+        end
+
+        accessor = accessor_class.new
+
+        args[:accessor] = accessor
+        args[:read_only] = true
+
+        property(name, **args)
+      end
+
       def self.array(name, mapper)
         property(name, mapper: JM::Mappers::ArrayMapper.new(mapper))
       end
