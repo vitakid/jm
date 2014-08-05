@@ -5,7 +5,7 @@ module JM
     class SelfLinkMapper < Mapper
       def initialize(mapper)
         @mapper = mapper
-        @pipe = mapper.class.self_link_pipe
+        @pipe = mapper.self_link_pipe
       end
 
       def write(object)

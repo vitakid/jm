@@ -5,9 +5,13 @@ module JM
     # You are supposed to subclass this class and configure your mapper with the
     # available configuration methods.
     class Mapper < JM::Mapper
-      def self.pipe(pipe, read_only: false, write_if: nil, read_if: nil)
-        @pipes ||= []
+      def initialize(source_class, target_class)
+        @pipes = []
+        @source_class = source_class
+        @target_class = target_class
+      end
 
+      def pipe(pipe, read_only: false, write_if: nil, read_if: nil)
         if read_only
           pipe = Pipes::ReadOnlyPipe.new(pipe)
         end
@@ -23,15 +27,11 @@ module JM
         @pipes << pipe
       end
 
-      def self.pipes
-        @pipes || []
-      end
-
-      def self.property(name,
-                        accessor: Accessors::AccessorAccessor.new(name),
-                        mapper: nil,
-                        **rest,
-                        &block)
+      def property(name,
+                   accessor: Accessors::AccessorAccessor.new(name),
+                   mapper: nil,
+                   **rest,
+                   &block)
         if block
           accessor_class = Class.new(Accessor)
           accessor_class.class_eval(&block)
@@ -52,7 +52,7 @@ module JM
         pipe(p, **rest)
       end
 
-      def self.read_only_property(name, **args, &block)
+      def read_only_property(name, **args, &block)
         accessor_class = Class.new(Accessor) do
           define_method(:get) do |object|
             block.call(object)
@@ -67,25 +67,16 @@ module JM
         property(name, **args)
       end
 
-      def self.array(name, mapper, **args)
+      def array(name, mapper, **args)
         args[:mapper] = JM::Mappers::ArrayMapper.new(mapper)
 
         property(name, **args)
       end
 
-      def initialize(source_class, target_class)
-        @source_class = source_class
-        @target_class = target_class
-      end
-
-      def pipes
-        self.class.pipes
-      end
-
       def write(object)
         target = instantiate_target(object)
 
-        pipes.each_with_object(target) do |pipe, t|
+        @pipes.each_with_object(target) do |pipe, t|
           pipe.pipe(object, t)
         end
       end
@@ -93,7 +84,7 @@ module JM
       def read(target)
         source = instantiate_source(target)
 
-        pipes.each_with_object(source) do |pipe, s|
+        @pipes.each_with_object(source) do |pipe, s|
           pipe.unpipe(s, target)
         end
       end

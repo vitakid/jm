@@ -6,10 +6,10 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(person_class, Hash)
-        end
 
-        property :first_name
-        property :last_name
+          property :first_name
+          property :last_name
+        end
       end
     end
 
@@ -49,11 +49,11 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(person, Hash)
+
+          property :name
+
+          property :age, read_only: true
         end
-
-        property :name
-
-        property :age, read_only: true
       end
     end
 
@@ -85,13 +85,13 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(person, Hash)
+
+          property :name
+
+          property :age,
+                   write_if: -> p { p.age > 18 },
+                   read_if: -> p { p[:age] < 18 }
         end
-
-        property :name
-
-        property :age,
-                 write_if: -> p { p.age > 18 },
-                 read_if: -> p { p[:age] < 18 }
       end
     end
 
@@ -143,10 +143,10 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(person, Hash)
-        end
 
-        read_only_property :name do |p|
-          "#{p.name}, #{p.age}"
+          read_only_property :name do |p|
+            "#{p.name}, #{p.age}"
+          end
         end
       end
     end
@@ -179,18 +179,18 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(person, Hash)
-        end
 
-        property :name do
-          def get(person)
-            "#{person.name} (#{person.age})"
-          end
+          property :name do
+            def get(person)
+              "#{person.name} (#{person.age})"
+            end
 
-          def set(person, value)
-            name, age = /(.+) \(([0-9]+)\)/.match(value).captures
+            def set(person, value)
+              name, age = /(.+) \(([0-9]+)\)/.match(value).captures
 
-            person.name = name
-            person.age = age.to_i
+              person.name = name
+              person.age = age.to_i
+            end
           end
         end
       end
@@ -224,9 +224,9 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(person_class, Hash)
-        end
 
-        property :name
+          property :name
+        end
       end
     end
 
@@ -237,9 +237,9 @@ describe JM::DSL::Mapper do
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
           super(community_class, Hash)
-        end
 
-        array :people, m
+          array :people, m
+        end
       end
     end
 

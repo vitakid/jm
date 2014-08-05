@@ -2,7 +2,11 @@ module JM
   module DSL
     # Extended DSL for HAL mapping
     class HALMapper < DSL::Mapper
-      def self.link(rel, template_or_mapper, **args, &block)
+      def initialize(source_class)
+        super(source_class, Hash)
+      end
+
+      def link(rel, template_or_mapper, **args, &block)
         if template_or_mapper.is_a?(String)
           inline_link(rel, template_or_mapper, **args, &block)
         else
@@ -10,12 +14,12 @@ module JM
         end
       end
 
-      def self.inline_link(rel,
-                           uri_template,
-                           params_accessor:
-                             TemplateParamsAccessor.new(uri_template),
-                           **args,
-                           &block)
+      def inline_link(rel,
+                      uri_template,
+                      params_accessor:
+                        TemplateParamsAccessor.new(uri_template),
+                      **args,
+                      &block)
         params_accessor = accessor_or_die(params_accessor, &block)
 
         link_mapper = HAL::LinkMapper.new(uri_template)
@@ -32,7 +36,7 @@ module JM
         end
       end
 
-      def self.mapper_link(rel, mapper, accessor: nil, **args, &block)
+      def mapper_link(rel, mapper, accessor: nil, **args, &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = SelfLinkMapper.new(mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
@@ -44,7 +48,7 @@ module JM
         pipe(p, **args)
       end
 
-      def self.links(rel, mapper, accessor: nil, **args, &block)
+      def links(rel, mapper, accessor: nil, **args, &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = Mappers::ArrayMapper.new(SelfLinkMapper.new(mapper))
         link_accessor = HAL::LinkAccessor.new(rel)
@@ -56,10 +60,10 @@ module JM
         pipe(p, **args)
       end
 
-      def self.embedded(rel,
-                        mapper,
-                        accessor: Accessors::AccessorAccessor.new(rel),
-                        &block)
+      def embedded(rel,
+                   mapper,
+                   accessor: Accessors::AccessorAccessor.new(rel),
+                   &block)
         accessor = accessor_or_die(accessor, &block)
         embedded_accessor = HAL::EmbeddedAccessor.new(rel)
 
@@ -70,11 +74,11 @@ module JM
         pipe(p)
       end
 
-      def self.embeddeds(rel,
-                         mapper,
-                         accessor: Accessors::AccessorAccessor.new(rel),
-                         **args,
-                         &block)
+      def embeddeds(rel,
+                    mapper,
+                    accessor: Accessors::AccessorAccessor.new(rel),
+                    **args,
+                    &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = Mappers::ArrayMapper.new(mapper)
         embedded_accessor = HAL::EmbeddedAccessor.new(rel)
@@ -86,7 +90,7 @@ module JM
         pipe(p, **args)
       end
 
-      def self.accessor_or_die(accessor, &block)
+      def accessor_or_die(accessor, &block)
         if block
           block_to_accessor(&block)
         else
@@ -98,27 +102,19 @@ module JM
         end
       end
 
-      def self.block_to_accessor(&block)
+      def block_to_accessor(&block)
         accessor_class = Class.new(JM::Accessor)
         accessor_class.class_exec(&block)
 
         accessor_class.new
       end
 
-      def self.self_link_pipe
+      def self_link_pipe
         @self_link_pipe
       end
 
-      def self.self_link_pipe=(pipe)
+      def self_link_pipe=(pipe)
         @self_link_pipe = pipe
-      end
-
-      def initialize(source_class)
-        super(source_class, Hash)
-      end
-
-      def self_link_pipe
-        self.class.self_link_pipe
       end
 
       def instantiate_source(target)
