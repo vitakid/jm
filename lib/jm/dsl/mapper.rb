@@ -19,6 +19,8 @@ module JM
                         accessor: Accessors::AccessorAccessor.new(name),
                         read_only: false,
                         mapper: nil,
+                        write_if: nil,
+                        read_if: nil,
                         &block)
         if block
           accessor_class = Class.new(Accessor)
@@ -39,6 +41,14 @@ module JM
 
         if read_only
           p = Pipes::ReadOnlyPipe.new(p)
+        end
+
+        if write_if
+          p = Pipes::ConditionalWritePipe.new(p, write_if)
+        end
+
+        if read_if
+          p = Pipes::ConditionalReadPipe.new(p, read_if)
         end
 
         pipe(p)

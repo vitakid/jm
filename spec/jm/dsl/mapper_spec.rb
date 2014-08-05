@@ -74,6 +74,64 @@ describe JM::DSL::Mapper do
     end
   end
 
+  context "when mapping a property conditionally" do
+    let(:person_class) do
+      Struct.new(:name, :age)
+    end
+
+    let(:person_mapper) do
+      person = person_class
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(person, Hash)
+        end
+
+        property :name
+
+        property :age,
+                 write_if: -> p { p.age > 18 },
+                 read_if: -> p { p[:age] < 18 }
+      end
+    end
+
+    context "to a hash" do
+      it "should write the property, if the condition holds" do
+        person = person_class.new("Marten", 21)
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(name: "Marten", age: 21)
+      end
+
+      it "should not write the property, if the condition fails" do
+        person = person_class.new("Alex", 7)
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(name: "Alex")
+      end
+    end
+
+    context "from a hash" do
+      it "should read the property, if the condition holds" do
+        hash = { name: "Alex", age: 14 }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("Alex", 14))
+      end
+
+      it "should not read the property, if the condition fails" do
+        hash = { name: "Marten", age: 21 }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("Marten", nil))
+      end
+    end
+  end
+
   context "when using the #read_only_property shorthand" do
     let(:person_class) do
       Struct.new(:name, :age)
