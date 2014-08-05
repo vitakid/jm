@@ -23,6 +23,9 @@ IfUnlessModifier:
 MethodLength:
   Enabled: false
 
+ClassLength:
+  Enabled: false
+
 RaiseArgs:
   Enabled: false
 
