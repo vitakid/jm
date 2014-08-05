@@ -300,4 +300,71 @@ describe JM::DSL::HALMapper do
       end
     end
   end
+
+  context "when mapping multiple embedded resources" do
+    let(:person_class) do
+      Struct.new(:name, :pets)
+    end
+
+    let(:person_mapper) do
+      pet_m = pet_mapper
+      person = person_class
+
+      Class.new(JM::DSL::HALMapper) do
+        define_method(:initialize) do
+          super(person)
+        end
+
+        embeddeds :pets, pet_m.new
+
+        property :name
+      end
+    end
+
+    context "to a hash" do
+      it "should embed the pets" do
+        person = person_class.new("Marten", [pet_class.new("Finchen"),
+                                             pet_class.new("Ronja")])
+
+        hash = person_mapper.new.write(person)
+
+        expect(hash).to eq(_embedded: {
+                             pets: [
+                               {
+                                 _links: { self: { href: "/pets/Finchen" } },
+                                 name: "Finchen"
+                               },
+                               {
+                                 _links: { self: { href: "/pets/Ronja" } },
+                                 name: "Ronja"
+                               }
+                             ]
+                           },
+                           name: "Marten")
+      end
+    end
+
+    context "from a hash" do
+      it "should read the embedded pet" do
+        hash = { _embedded: {
+                   pets: [
+                     {
+                       _links: { self: { href: "/pets/Finchen" } },
+                       name: "Finchen"
+                     },
+                     {
+                       _links: { self: { href: "/pets/Ronja" } },
+                       name: "Ronja"
+                     }
+                   ]
+                 },
+                 name: "Marten" }
+
+        person = person_mapper.new.read(hash)
+
+        expect(person).to eq(person_class.new("Marten", [pet_class.new("Finchen"),
+                                                         pet_class.new("Ronja")]))
+      end
+    end
+  end
 end

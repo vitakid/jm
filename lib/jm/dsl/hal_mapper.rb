@@ -69,6 +69,21 @@ module JM
         pipe(p)
       end
 
+      def self.embeddeds(rel,
+                         mapper,
+                         accessor: Accessors::AccessorAccessor.new(rel),
+                         &block)
+        accessor = accessor_or_die(accessor, &block)
+        mapper = Mappers::ArrayMapper.new(mapper)
+        embedded_accessor = HAL::EmbeddedAccessor.new(rel)
+
+        p = Pipes::CompositePipe.new(source_accessor: accessor,
+                                     mapper: mapper,
+                                     target_accessor: embedded_accessor)
+
+        pipe(p)
+      end
+
       def self.accessor_or_die(accessor, &block)
         if block
           block_to_accessor(&block)
