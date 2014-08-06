@@ -3,6 +3,7 @@ require "jm/exception"
 require "jm/mapper"
 require "jm/mappers/identity_mapper"
 require "jm/mappers/array_mapper"
+require "jm/mappers/instance_mapper"
 
 require "jm/accessor"
 require "jm/accessors/nil_accessor"

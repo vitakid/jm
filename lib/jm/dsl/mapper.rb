@@ -5,10 +5,9 @@ module JM
     # You are supposed to subclass this class and configure your mapper with the
     # available configuration methods.
     class Mapper < JM::Mapper
-      def initialize(source_class, target_class)
+      def initialize(factory)
         @pipes = []
-        @source_class = source_class
-        @target_class = target_class
+        @factory = factory
       end
 
       def pipe(pipe, read_only: false, write_if: nil, read_if: nil)
@@ -90,11 +89,11 @@ module JM
       end
 
       def instantiate_source(target)
-        @source_class.new
+        @factory.read(target)
       end
 
       def instantiate_target(source)
-        @target_class.new
+        @factory.write(source)
       end
     end
   end

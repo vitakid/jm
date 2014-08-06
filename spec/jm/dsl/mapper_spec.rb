@@ -5,7 +5,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(person_class, Hash)
+          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
 
           property :first_name
           property :last_name
@@ -48,7 +48,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(JM::Mappers::InstanceMapper.new(person, Hash))
 
           property :name
 
@@ -84,7 +84,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(JM::Mappers::InstanceMapper.new(person, Hash))
 
           property :name
 
@@ -142,7 +142,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(JM::Mappers::InstanceMapper.new(person, Hash))
 
           read_only_property :name do |p|
             "#{p.name}, #{p.age}"
@@ -178,7 +178,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(person, Hash)
+          super(JM::Mappers::InstanceMapper.new(person, Hash))
 
           property :name do
             def get(person)
@@ -223,7 +223,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(person_class, Hash)
+          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
 
           property :name
         end
@@ -236,7 +236,7 @@ describe JM::DSL::Mapper do
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(community_class, Hash)
+          super(JM::Mappers::InstanceMapper.new(community_class, Hash))
 
           array :people, m
         end
