@@ -2,8 +2,28 @@ module JM
   module DSL
     # Extended DSL for HAL mapping
     class HALMapper < DSL::Mapper
-      def initialize(source_class)
-        super(source_class, Hash)
+      def initialize(klass = nil)
+        if klass
+          super(JM::Mappers::InstanceMapper.new(klass, Hash))
+        else
+          super(JM::DSL::SelfLinkWrapper.new(self))
+        end
+      end
+
+      def self_link(uri_template, params_mapper: nil, &block)
+        params_mapper = mapper_or_die(params_mapper, &block)
+        link_mapper = HAL::LinkMapper.new(uri_template)
+        mapper = Mappers::MapperChain.new([params_mapper, link_mapper])
+
+        self.self_link_mapper = mapper
+      end
+
+      def self_link_mapper
+        @self_link_mapper
+      end
+
+      def self_link_mapper=(mapper)
+        @self_link_mapper = mapper
       end
 
       def link(rel, template_or_mapper, **args, &block)
@@ -29,11 +49,7 @@ module JM
                                      mapper: link_mapper,
                                      target_accessor: link_accessor)
 
-        if rel == :self
-          self.self_link_pipe = p
-        else
-          pipe(p, **args)
-        end
+        pipe(p, **args)
       end
 
       def mapper_link(rel,
@@ -43,11 +59,10 @@ module JM
                       **args,
                       &block)
         accessor = accessor_or_die(accessor, &block)
-        mapper = SelfLinkMapper.new(mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
 
         p = Pipes::CompositePipe.new(source_accessor: accessor,
-                                     mapper: mapper,
+                                     mapper: mapper.self_link_mapper,
                                      target_accessor: link_accessor)
 
         pipe(p, **args)
@@ -55,7 +70,7 @@ module JM
 
       def links(rel, mapper, accessor: nil, **args, &block)
         accessor = accessor_or_die(accessor, &block)
-        mapper = Mappers::ArrayMapper.new(SelfLinkMapper.new(mapper))
+        mapper = Mappers::ArrayMapper.new(mapper.self_link_mapper)
         link_accessor = HAL::LinkAccessor.new(rel)
 
         p = Pipes::CompositePipe.new(source_accessor: accessor,
@@ -114,32 +129,23 @@ module JM
         accessor_class.new
       end
 
-      def self_link_pipe
-        @self_link_pipe
-      end
-
-      def self_link_pipe=(pipe)
-        @self_link_pipe = pipe
-      end
-
-      def instantiate_source(target)
-        source = super
-
-        if self_link_pipe
-          self_link_pipe.unpipe(source, target)
+      def mapper_or_die(mapper, &block)
+        if block
+          block_to_mapper(&block)
+        else
+          if mapper.nil?
+            raise JM::Exception.new("You have to supply some form of mapper")
+          else
+            mapper
+          end
         end
-
-        source
       end
 
-      def instantiate_target(source)
-        target = super
+      def block_to_mapper(&block)
+        accessor_class = Class.new(JM::Mapper)
+        accessor_class.class_exec(&block)
 
-        if self_link_pipe
-          self_link_pipe.pipe(source, target)
-        end
-
-        target
+        accessor_class.new
       end
     end
   end

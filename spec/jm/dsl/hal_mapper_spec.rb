@@ -8,9 +8,17 @@ describe JM::DSL::HALMapper do
 
     Class.new(JM::DSL::HALMapper) do
       define_method(:initialize) do
-        super(pet)
+        super()
 
-        link :self, "/pets/{name}"
+        self_link "/pets/{name}" do
+          def write(pet)
+            { name: pet.name }
+          end
+
+          define_method(:read) do |params|
+            pet.new(params["name"])
+          end
+        end
 
         property :name
       end
@@ -27,17 +35,16 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super(person)
+          super()
 
-          link :self, "/people/{name}" do
-            define_method(:set) do |p, params|
+          self_link "/people/{name}" do
+            define_method(:read) do |params|
               first_name, last_name = params["name"].split("-")
 
-              p.first_name = first_name.capitalize
-              p.last_name = last_name.capitalize
+              p = person.new(first_name.capitalize, last_name.capitalize)
             end
 
-            def get(p)
+            def write(p)
               name = "#{p.first_name.downcase}-#{p.last_name.downcase}"
 
               { name: name }
@@ -119,15 +126,7 @@ describe JM::DSL::HALMapper do
         define_method(:initialize) do
           super(person)
 
-          link :pet, pet_m.new do
-            def set(person, pet)
-              person.pet = pet
-            end
-
-            def get(person)
-              person.pet
-            end
-          end
+          link :pet, pet_m.new
 
           property :name
         end
@@ -169,9 +168,17 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super(person)
+          super()
 
-          link :self, "/people/{name}"
+          self_link "/people/{name}" do
+            define_method(:read) do |params|
+              person.new(params["name"])
+            end
+
+            def write(person)
+              { name: person["name"] }
+            end
+          end
 
           link :pet,
                pet_m.new,
@@ -287,11 +294,11 @@ describe JM::DSL::HALMapper do
     context "from a hash" do
       it "should read the embedded pet" do
         hash = { _embedded: {
-          pet: {
-            _links: { self: { href: "/pets/Finchen" } },
-            name: "Finchen"
-          }
-        },
+                   pet: {
+                     _links: { self: { href: "/pets/Finchen" } },
+                     name: "Finchen"
+                   }
+                 },
                  name: "Marten" }
 
         person = person_mapper.new.read(hash)
@@ -348,17 +355,17 @@ describe JM::DSL::HALMapper do
     context "from a hash" do
       it "should read the embedded pet" do
         hash = { _embedded: {
-          pets: [
-            {
-              _links: { self: { href: "/pets/Finchen" } },
-              name: "Finchen"
-            },
-            {
-              _links: { self: { href: "/pets/Ronja" } },
-              name: "Ronja"
-            }
-          ]
-        },
+                   pets: [
+                     {
+                       _links: { self: { href: "/pets/Finchen" } },
+                       name: "Finchen"
+                     },
+                     {
+                       _links: { self: { href: "/pets/Ronja" } },
+                       name: "Ronja"
+                     }
+                   ]
+                 },
                  name: "Marten" }
 
         person = person_mapper.new.read(hash)

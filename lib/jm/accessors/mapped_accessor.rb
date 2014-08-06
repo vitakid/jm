@@ -17,6 +17,8 @@ module JM
 
       def set(object, value)
         @accessor.set(object, @mapper.write(value))
+
+        object
       end
     end
   end

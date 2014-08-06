@@ -4,6 +4,7 @@ require "jm/mapper"
 require "jm/mappers/identity_mapper"
 require "jm/mappers/array_mapper"
 require "jm/mappers/instance_mapper"
+require "jm/mappers/mapper_chain"
 
 require "jm/accessor"
 require "jm/accessors/nil_accessor"
@@ -22,7 +23,7 @@ require "jm/hal/link_accessor"
 require "jm/hal/embedded_accessor"
 
 require "jm/dsl/mapper"
-require "jm/dsl/self_link_mapper"
+require "jm/dsl/self_link_wrapper"
 require "jm/dsl/template_params_accessor"
 require "jm/dsl/hal_mapper"
 
