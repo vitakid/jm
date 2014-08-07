@@ -2,12 +2,11 @@ module JM
   module DSL
     # Extended DSL for HAL mapping
     class HALMapper < DSL::Mapper
-      def initialize(klass = nil)
-        if klass
-          super(JM::Mappers::InstanceMapper.new(klass, Hash))
-        else
-          super(JM::DSL::SelfLinkWrapper.new(self))
-        end
+      def initialize(klass)
+        instance_mapper = JM::Mappers::InstanceMapper.new(klass, Hash)
+        link_mapper = JM::DSL::SelfLinkWrapper.new(self, instance_mapper)
+
+        super(link_mapper)
       end
 
       def property(name, *args, &block)

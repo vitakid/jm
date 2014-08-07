@@ -8,7 +8,7 @@ describe JM::DSL::HALMapper do
 
     Class.new(JM::DSL::HALMapper) do
       define_method(:initialize) do
-        super()
+        super(pet)
 
         self_link "/pets/{name}" do
           def write(pet)
@@ -35,13 +35,13 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super()
+          super(person)
 
           self_link "/people/{name}" do
             define_method(:read) do |params|
               first_name, last_name = params["name"].split("-")
 
-              p = person.new(first_name.capitalize, last_name.capitalize)
+              person.new(first_name.capitalize, last_name.capitalize)
             end
 
             def write(p)
@@ -62,19 +62,35 @@ describe JM::DSL::HALMapper do
 
         hash = mapper_class.new.write(person)
 
-        expect(hash).to eq("_links" => { "self" => { "href" => "/people/marten-lienen" } },
+        expect(hash).to eq("_links" => {
+                             "self" => { "href" => "/people/marten-lienen" }
+                           },
                            "age" => 21)
       end
     end
 
     context "from a hash" do
       it "should instantiate the object from the URI" do
-        hash = { "_links" => { "self" => { "href" => "/people/marten-lienen" } },
-                 "age" => 21 }
+        hash = {
+          "_links" => {
+            "self" => { "href" => "/people/marten-lienen" }
+          },
+          "age" => 21
+        }
 
         person = mapper_class.new.read(hash)
 
         expect(person).to eq(person_class.new("Marten", "Lienen", 21))
+      end
+    end
+
+    context "from a hash without a 'self' link" do
+      it "should instantiate an empty object" do
+        hash = { "age" => 21 }
+
+        person = mapper_class.new.read(hash)
+
+        expect(person).to eq(person_class.new(nil, nil, 21))
       end
     end
   end
@@ -139,7 +155,9 @@ describe JM::DSL::HALMapper do
 
         hash = person_mapper.new.write(person)
 
-        expect(hash).to eq("_links" => { "pet" => { "href" => "/pets/Finchen" } },
+        expect(hash).to eq("_links" => {
+                             "pet" => { "href" => "/pets/Finchen" }
+                           },
                            "name" => "Frodo")
       end
     end
@@ -168,7 +186,7 @@ describe JM::DSL::HALMapper do
 
       Class.new(JM::DSL::HALMapper) do
         define_method(:initialize) do
-          super()
+          super(person)
 
           self_link "/people/{name}" do
             define_method(:read) do |params|
@@ -193,15 +211,17 @@ describe JM::DSL::HALMapper do
 
         hash = person_mapper.new.write(person)
 
-        expect(hash).to eq("_links" => { "self" => { "href" => "/people/Marten" },
-                                     "pet" => { "href" => "/pets/Ronja" } })
+        expect(hash).to eq("_links" => {
+                             "self" => { "href" => "/people/Marten" },
+                             "pet" => { "href" => "/pets/Ronja" }
+                           })
       end
     end
 
     context "from a hash" do
       it "should parse both links" do
         hash = { "_links" => { "self" => { "href" => "/people/Marten" },
-                           "pet" => { "href" => "/pets/Ronja" } } }
+                               "pet" => { "href" => "/pets/Ronja" } } }
 
         person = person_mapper.new.read(hash)
 
@@ -237,15 +257,16 @@ describe JM::DSL::HALMapper do
 
         hash = person_mapper.new.write(person)
 
-        expect(hash).to eq("_links" => { "pet" => [{ "href" => "/pets/Finchen" },
-                                           { "href" => "/pets/Ronja" }] })
+        expect(hash).to eq("_links" => {
+                             "pet" => [{ "href" => "/pets/Finchen" },
+                                       { "href" => "/pets/Ronja" }] })
       end
     end
 
     context "from a hash" do
       it "should map all links to objects" do
         hash = { "_links" => { "pet" => [{ "href" => "/pets/Finchen" },
-                                 { "href" => "/pets/Ronja" }] } }
+                                         { "href" => "/pets/Ronja" }] } }
 
         person = person_mapper.new.read(hash)
 
@@ -283,7 +304,9 @@ describe JM::DSL::HALMapper do
 
         expect(hash).to eq("_embedded" => {
                              "pet" => {
-                               "_links" => { "self" => { "href" => "/pets/Finchen" } },
+                               "_links" => {
+                                 "self" => { "href" => "/pets/Finchen" }
+                               },
                                "name" => "Finchen"
                              }
                            },
@@ -294,11 +317,11 @@ describe JM::DSL::HALMapper do
     context "from a hash" do
       it "should read the embedded pet" do
         hash = { "_embedded" => {
-                   "pet" => {
-                     "_links" => { "self" => { "href" => "/pets/Finchen" } },
-                     "name" => "Finchen"
-                   }
-                 },
+          "pet" => {
+            "_links" => { "self" => { "href" => "/pets/Finchen" } },
+            "name" => "Finchen"
+          }
+        },
                  "name" => "Marten" }
 
         person = person_mapper.new.read(hash)
@@ -339,11 +362,15 @@ describe JM::DSL::HALMapper do
         expect(hash).to eq("_embedded" => {
                              "pets" => [
                                {
-                                 "_links" => { "self" => { "href" => "/pets/Finchen" } },
+                                 "_links" => {
+                                   "self" => { "href" => "/pets/Finchen" }
+                                 },
                                  "name" => "Finchen"
                                },
                                {
-                                 "_links" => { "self" => { "href" => "/pets/Ronja" } },
+                                 "_links" => {
+                                   "self" => { "href" => "/pets/Ronja" }
+                                 },
                                  "name" => "Ronja"
                                }
                              ]
@@ -355,17 +382,17 @@ describe JM::DSL::HALMapper do
     context "from a hash" do
       it "should read the embedded pet" do
         hash = { "_embedded" => {
-                   "pets" => [
-                     {
-                       "_links" => { "self" => { "href" => "/pets/Finchen" } },
-                       "name" => "Finchen"
-                     },
-                     {
-                       "_links" => { "self" => { "href" => "/pets/Ronja" } },
-                       "name" => "Ronja"
-                     }
-                   ]
-                 },
+          "pets" => [
+            {
+              "_links" => { "self" => { "href" => "/pets/Finchen" } },
+              "name" => "Finchen"
+            },
+            {
+              "_links" => { "self" => { "href" => "/pets/Ronja" } },
+              "name" => "Ronja"
+            }
+          ]
+        },
                  "name" => "Marten" }
 
         person = person_mapper.new.read(hash)
@@ -398,23 +425,23 @@ describe JM::DSL::HALMapper do
 
     it "should make them read-only by default" do
       hash = { "_embedded" => {
-                 "favorite" => {
-                   "_links" => {
-                     "self" => { "href" => "/pets/Finchen" }
-                   },
-                   "name" => "Finchen"
-                 },
-                 "pets" => [
-                   {
-                     "_links" => { "self" => { "href" => "/pets/Finchen" } },
-                     "name" => "Finchen"
-                   },
-                   {
-                     "_links" => { "self" => { "href" => "/pets/Ronja" } },
-                     "name" => "Ronja"
-                   }
-                 ]
-               },
+        "favorite" => {
+          "_links" => {
+            "self" => { "href" => "/pets/Finchen" }
+          },
+          "name" => "Finchen"
+        },
+        "pets" => [
+          {
+            "_links" => { "self" => { "href" => "/pets/Finchen" } },
+            "name" => "Finchen"
+          },
+          {
+            "_links" => { "self" => { "href" => "/pets/Ronja" } },
+            "name" => "Ronja"
+          }
+        ]
+      },
                "name" => "Marten" }
 
       person = person_mapper.new.read(hash)

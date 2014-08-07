@@ -1,22 +1,34 @@
 module JM
   module DSL
-    # Use the {HALMapper#self_link_accessor} of another {HALMapper} to map to and
-    # from links
+    # Use the {HALMapper#self_link_accessor} of another {HALMapper} to map to
+    # and from links
+    #
+    # If the mapper has no self link or no self link is present, fall back to
+    # fallback mapper.
     class SelfLinkWrapper < Mapper
-      def initialize(mapper)
+      def initialize(mapper, fallback)
         @mapper = mapper
+        @fallback = fallback
       end
 
       def write(object)
-        link = @mapper.self_link_mapper.write(object)
+        if @mapper.self_link_mapper
+          link = @mapper.self_link_mapper.write(object)
 
-        { "_links" => { "self" => link } }
+          { "_links" => { "self" => link } }
+        else
+          @fallback.write(object)
+        end
       end
 
       def read(resource)
-        link = resource.fetch("_links", {}).fetch("self")
+        link = resource.fetch("_links", {}).fetch("self", nil)
 
-        @mapper.self_link_mapper.read(link)
+        if link && @mapper.self_link_mapper
+          @mapper.self_link_mapper.read(link)
+        else
+          @fallback.read(resource)
+        end
       end
     end
   end
