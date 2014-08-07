@@ -5,8 +5,8 @@ module JM
     def pipe(source, target)
     end
 
-    # Pipe data from target back to source
-    def unpipe(source, target)
+    # Slurp data from target back to source
+    def slurp(source, target)
     end
   end
 end

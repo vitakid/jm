@@ -18,7 +18,7 @@ module JM
         @target_accessor.set(target, value)
       end
 
-      def unpipe(source, target)
+      def slurp(source, target)
         value = @mapper.read(@target_accessor.get(target))
 
         @source_accessor.set(source, value)

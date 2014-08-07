@@ -10,7 +10,7 @@ module JM
         @pipe.pipe(source, target)
       end
 
-      def unpipe(source, target)
+      def slurp(source, target)
       end
     end
   end

@@ -1,6 +1,6 @@
 module JM
   module Pipes
-    # Only forward {#unpipe} calls to the wrapped pipe, if a condition holds
+    # Only forward {#slurp} calls to the wrapped pipe, if a condition holds
     class ConditionalReadPipe < Pipe
       def initialize(pipe, condition)
         @pipe = pipe
@@ -11,9 +11,9 @@ module JM
         @pipe.pipe(source, target)
       end
 
-      def unpipe(source, target)
+      def slurp(source, target)
         if @condition.call(target)
-          @pipe.unpipe(source, target)
+          @pipe.slurp(source, target)
         end
       end
     end

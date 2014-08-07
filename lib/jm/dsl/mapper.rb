@@ -84,7 +84,7 @@ module JM
         source = instantiate_source(target)
 
         @pipes.each_with_object(source) do |pipe, s|
-          pipe.unpipe(s, target)
+          pipe.slurp(s, target)
         end
       end
 
