@@ -268,7 +268,7 @@ describe JM::DSL::HALMapper do
         define_method(:initialize) do
           super(person)
 
-          embedded :pet, pet_m.new
+          embedded :pet, pet_m.new, read_only: false
 
           property :name
         end
@@ -322,7 +322,7 @@ describe JM::DSL::HALMapper do
         define_method(:initialize) do
           super(person)
 
-          embeddeds :pets, pet_m.new
+          embeddeds :pets, pet_m.new, read_only: false
 
           property :name
         end
@@ -374,6 +374,52 @@ describe JM::DSL::HALMapper do
                                                pet_class.new("Ronja")])
         expect(person).to eq(expected)
       end
+    end
+  end
+
+  context "when embedding objects" do
+    let(:person_class) do
+      Struct.new(:name, :favorite, :pets)
+    end
+
+    let(:person_mapper) do
+      pet_m = pet_mapper
+      person = person_class
+
+      Class.new(JM::DSL::HALMapper) do
+        define_method(:initialize) do
+          super(person)
+
+          embedded :favorite, pet_m.new
+          embeddeds :pets, pet_m.new
+        end
+      end
+    end
+
+    it "should make them read-only by default" do
+      hash = { "_embedded" => {
+                 "favorite" => {
+                   "_links" => {
+                     "self" => { "href" => "/pets/Finchen" }
+                   },
+                   "name" => "Finchen"
+                 },
+                 "pets" => [
+                   {
+                     "_links" => { "self" => { "href" => "/pets/Finchen" } },
+                     "name" => "Finchen"
+                   },
+                   {
+                     "_links" => { "self" => { "href" => "/pets/Ronja" } },
+                     "name" => "Ronja"
+                   }
+                 ]
+               },
+               "name" => "Marten" }
+
+      person = person_mapper.new.read(hash)
+
+      expect(person).to eq(person_class.new(nil, nil, nil))
     end
   end
 end

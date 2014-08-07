@@ -87,6 +87,7 @@ module JM
       def embedded(rel,
                    mapper,
                    accessor: Accessors::AccessorAccessor.new(rel),
+                   read_only: true,
                    **args,
                    &block)
         accessor = accessor_or_die(accessor, &block)
@@ -96,12 +97,15 @@ module JM
                                      mapper: mapper,
                                      target_accessor: embedded_accessor)
 
+        args[:read_only] = read_only
+
         pipe(p, **args)
       end
 
       def embeddeds(rel,
                     mapper,
                     accessor: Accessors::AccessorAccessor.new(rel),
+                    read_only: true,
                     **args,
                     &block)
         accessor = accessor_or_die(accessor, &block)
@@ -111,6 +115,8 @@ module JM
         p = Pipes::CompositePipe.new(source_accessor: accessor,
                                      mapper: mapper,
                                      target_accessor: embedded_accessor)
+
+        args[:read_only] = read_only
 
         pipe(p, **args)
       end
