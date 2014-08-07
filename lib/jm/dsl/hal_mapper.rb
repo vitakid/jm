@@ -83,6 +83,7 @@ module JM
       def embedded(rel,
                    mapper,
                    accessor: Accessors::AccessorAccessor.new(rel),
+                   **args,
                    &block)
         accessor = accessor_or_die(accessor, &block)
         embedded_accessor = HAL::EmbeddedAccessor.new(rel)
@@ -91,7 +92,7 @@ module JM
                                      mapper: mapper,
                                      target_accessor: embedded_accessor)
 
-        pipe(p)
+        pipe(p, **args)
       end
 
       def embeddeds(rel,
