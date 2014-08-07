@@ -3,11 +3,11 @@ module JM
     # Access HAL links by rel in HAL hashes
     class LinkAccessor < Accessor
       def initialize(rel)
-        @rel = rel
+        @rel = rel.to_s
       end
 
       def get(hash)
-        links = hash[:_links]
+        links = hash["_links"]
 
         if links
           links[@rel]
@@ -15,9 +15,9 @@ module JM
       end
 
       def set(hash, link)
-        hash[:_links] ||= {}
+        hash["_links"] ||= {}
 
-        hash[:_links][@rel] = link
+        hash["_links"][@rel] = link
       end
     end
   end

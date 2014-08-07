@@ -10,6 +10,10 @@ module JM
         end
       end
 
+      def property(name, *args, &block)
+        super(name.to_s, *args, &block)
+      end
+
       def self_link(uri_template, params_mapper: nil, &block)
         params_mapper = mapper_or_die(params_mapper, &block)
         link_mapper = HAL::LinkMapper.new(uri_template)

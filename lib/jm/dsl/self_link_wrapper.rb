@@ -10,11 +10,11 @@ module JM
       def write(object)
         link = @mapper.self_link_mapper.write(object)
 
-        { _links: { self: link } }
+        { "_links" => { "self" => link } }
       end
 
       def read(resource)
-        link = resource.fetch(:_links, {}).fetch(:self)
+        link = resource.fetch("_links", {}).fetch("self")
 
         @mapper.self_link_mapper.read(link)
       end

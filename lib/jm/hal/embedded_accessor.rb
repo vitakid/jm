@@ -3,11 +3,11 @@ module JM
     # Access HAL embedded resources by rel in HAL hashes
     class EmbeddedAccessor < Accessor
       def initialize(rel)
-        @rel = rel
+        @rel = rel.to_s
       end
 
       def get(hash)
-        embeddeds = hash[:_embedded]
+        embeddeds = hash["_embedded"]
 
         if embeddeds
           embeddeds[@rel]
@@ -15,9 +15,9 @@ module JM
       end
 
       def set(hash, resource)
-        hash[:_embedded] ||= {}
+        hash["_embedded"] ||= {}
 
-        hash[:_embedded][@rel] = resource
+        hash["_embedded"][@rel] = resource
       end
     end
   end
