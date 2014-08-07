@@ -2,3 +2,6 @@ Gemfile.lock
 
 # Local bundler settings
 .bundle
+
+# Build artifacts
+pkg
