@@ -26,6 +26,9 @@ MethodLength:
 ClassLength:
   Enabled: false
 
+ParameterLists:
+  Enabled: false
+
 RaiseArgs:
   Enabled: false
 
