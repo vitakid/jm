@@ -66,10 +66,10 @@ module JM
         property(name, **args)
       end
 
-      def array(name, mapper, **args)
+      def array(name, mapper, **args, &block)
         args[:mapper] = JM::Mappers::ArrayMapper.new(mapper)
 
-        property(name, **args)
+        property(name, **args, &block)
       end
 
       def write(object)

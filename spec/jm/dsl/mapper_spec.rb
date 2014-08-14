@@ -271,5 +271,28 @@ describe JM::DSL::Mapper do
                                           person.new("Lienen")]))
       end
     end
+
+    it "should be possible to define a custom accessor with a block" do
+      person_m = person_mapper.new
+      person_class = person
+      m = Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+
+          array :persons, person_m do
+            def get(community)
+              community.people
+            end
+          end
+        end
+      end
+
+      community_mapper = m.new
+      c = community.new([person.new("A")])
+
+      hash = community_mapper.write(c)
+
+      expect(hash).to eq(persons: [{ name: "A" }])
+    end
   end
 end
