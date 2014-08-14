@@ -159,6 +159,40 @@ mapper.read("Wed, 13 Aug 2014 00:00:00 +0000")
 # => #<Date: 2014-08-13 ((2456883j,0s,0n),+0s,2299161j)>
 ```
 
+### Pipes
+
+Defining a custom pipe is the most general way of pushing data from one
+structure into another and slurping it back.
+
+```ruby
+Person = Struct.new(:name, :age)
+
+class PersonPipe < JM::Pipe
+  def pipe(person, hash)
+    hash[:name] = person.name
+    hash[:info] ||= {}
+    hash[:info][:age] = person.age
+  end
+
+  def slurp(person, hash)
+    person.name = hash[:name]
+    person.age = hash[:info][:age]
+  end
+end
+
+pipe = PersonPipe.new
+person = Person.new("Gandalf", 513)
+hash = {}
+
+pipe.pipe(person, hash)
+hash
+# => {:name=>"Gandalf", :info=>{:age=>513}}
+
+pipe.slurp(person, {name: "Frodo", info: {age: 50}})
+person
+# => #<struct Person name="Frodo", age=50>
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
