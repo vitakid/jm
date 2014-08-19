@@ -1,5 +1,19 @@
 # JM - Bidirectional JSON mapping
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [Usage](#usage)
+- [Concepts](#concepts)
+  - [Accessors](#accessors)
+  - [Mapper](#mapper)
+  - [Pipes](#pipes)
+- [Installation](#installation)
+- [Contributing](#contributing)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Usage
 
 ```ruby
@@ -77,7 +91,7 @@ mapper.read(hal)
 # => #<struct Person name="Cat Owner", pets=[#<struct Pet name="D", age=1>, #<struct Pet name="Cat", age=19>]>
 ```
 
-## Manual
+## Concepts
 
 There are three concepts, that are the key to understanding `jm`.
 
