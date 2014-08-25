@@ -3,5 +3,11 @@ Gemfile.lock
 # Local bundler settings
 .bundle
 
+# yardoc settings
+.yardoc
+
 # Build artifacts
 pkg
+
+# Generated documentation
+doc
