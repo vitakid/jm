@@ -207,6 +207,23 @@ person
 # => #<struct Person name="Frodo", age=50>
 ```
 
+## Documentation
+
+You can find the DSL documentation directly
+[in the code](lib/jm/dsl). Alternatively you can execute to the following shell
+script to generate the docs and view them
+[in your browser](http://localhost:8000).
+
+```sh
+cd <jm project root>
+
+bundle exec yardoc lib
+
+cd doc
+
+python -m http.server -p 8000
+```
+
 ## Installation
 
 Add this line to your application's Gemfile:
