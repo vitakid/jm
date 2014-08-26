@@ -18,15 +18,11 @@ module JM
         link_mapper = HAL::LinkMapper.new(uri_template)
         mapper = Mappers::MapperChain.new([params_mapper, link_mapper])
 
-        self.self_link_mapper = mapper
+        @self_link_mapper = mapper
       end
 
       def self_link_mapper
         @self_link_mapper
-      end
-
-      def self_link_mapper=(mapper)
-        @self_link_mapper = mapper
       end
 
       def link(rel, template_or_mapper, **args, &block)
