@@ -4,7 +4,7 @@ module JM
   module DSL
     # Read and write URI template parameters to and from objects
     #
-    # So for example if the URI template is "/people/{name}-{age}", this
+    # So for example if the URI template is `"/people/{name}-{age}"`, this
     # accessor will map `Person.new("Marten", 21)` to `{ name: "Marten", age: 21
     # }` and back.
     class TemplateParamsAccessor < Accessor

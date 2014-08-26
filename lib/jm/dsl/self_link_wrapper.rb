@@ -1,7 +1,7 @@
 module JM
   module DSL
-    # Use the {HALMapper#self_link_accessor} of another {HALMapper} to map to
-    # and from links
+    # Use the {HALMapper#self_link_mapper} of another {HALMapper} to map to and
+    # from links
     #
     # If the mapper has no self link or no self link is present, fall back to
     # fallback mapper.
