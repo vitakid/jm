@@ -2,6 +2,11 @@ module JM
   module DSL
     # An extended DSL with specialized methods for mapping to HAL
     class HALMapper < DSL::Mapper
+      # Initialize a new HAL mapper
+      #
+      # @param [Class] klass Class of the object to be mapped. When you try to
+      #   {#read} a HAL resource without a "self" link, the mapper will
+      #   instantiate a new object with `klass.new` instead of {#self_link}.
       def initialize(klass)
         instance_mapper = JM::Mappers::InstanceMapper.new(klass, Hash)
         link_mapper = JM::DSL::SelfLinkWrapper.new(self, instance_mapper)
@@ -46,6 +51,13 @@ module JM
         @self_link_mapper
       end
 
+      # Link to a resource
+      #
+      # This is a general frontend to define links, that refers to other methods
+      # depending on it's arguments.
+      #
+      # @see #inline_link
+      # @see #mapper_link
       def link(rel, template_or_mapper, **args, &block)
         if template_or_mapper.is_a?(String)
           inline_link(rel, template_or_mapper, **args, &block)
@@ -54,6 +66,24 @@ module JM
         end
       end
 
+      # Link to a resource with an URI template
+      #
+      # @example
+      #   inline_link :pet, "/people/{person}/pets/{name}" do
+      #     def get(person)
+      #       { person: person.name, name: person.pet.name }
+      #     end
+      #
+      #     def set(person, params)
+      #       person.pet = Pet.new(params["name"])
+      #     end
+      #   end
+      # @param [Symbol] rel Link relation name
+      # @param [String] uri_template RFC6570 URI template
+      # @param [JM::Accessor] params_accessor Accessor to read template params
+      #   from source and write them back
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Define the params_accessor inline
       def inline_link(rel,
                       uri_template,
                       params_accessor:
@@ -72,6 +102,14 @@ module JM
         pipe(p, **args)
       end
 
+      # Link to a resource by reusing the "self" link of another mapper
+      #
+      # @param [Symbol] rel Link relation name
+      # @param [JM::Mapper] mapper Mapper to reuse
+      # @param [JM::Accessor] accessor Accessor for the object, that will be
+      #   passed to the mapper
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Define the accessor inline
       def mapper_link(rel,
                       mapper,
                       accessor:
@@ -88,6 +126,13 @@ module JM
         pipe(p, **args)
       end
 
+      # Link to an array of resources
+      #
+      # @param [Symbol] rel Link relation name
+      # @param [JM::Mapper] mapper Mapper, that is applied to all array items
+      # @param [JM::Accessor] accessor Accessor for the array
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Define the accessor inline
       def links(rel, mapper, accessor: nil, **args, &block)
         accessor = accessor_or_die(accessor, &block)
         mapper = Mappers::ArrayMapper.new(mapper.self_link_mapper)
@@ -100,6 +145,16 @@ module JM
         pipe(p, **args)
       end
 
+      # Embed a resource
+      #
+      # Embedded resources are read-only be default, so that you don't grant
+      # access to objects accidentally.
+      #
+      # @param [Symbol] rel Link relation
+      # @param [JM::Mapper] mapper Mapper for the object
+      # @param [JM::Accessor] accessor Accessor for the object
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Define the accessor inline
       def embedded(rel,
                    mapper,
                    accessor: Accessors::AccessorAccessor.new(rel),
@@ -118,6 +173,16 @@ module JM
         pipe(p, **args)
       end
 
+      # Embed an array of resources
+      #
+      # Embedded resources are read-only be default, so that you don't grant
+      # access to objects accidentally.
+      #
+      # @param [Symbol] rel Link relation
+      # @param [JM::Mapper] mapper Mapper the array items
+      # @param [JM::Accessor] accessor Accessor for the array
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Define the accessor inline
       def embeddeds(rel,
                     mapper,
                     accessor: Accessors::AccessorAccessor.new(rel),
