@@ -3,12 +3,16 @@ module JM
     # A DSL for composing custom mappers
     #
     # It is the base for all mappers. At it's heart is the {#pipe} method. It
-    # let's you register a pipe to do arbitrarily complex mapping so this method
-    # alone should be good enough for everyting. All other methods are just
-    # shorthands to register pipes.
+    # let's you register a {JM::Pipe}. When writing an object, the object will
+    # be {JM::Pipe#pipe}d through all pipes. And when reading an object, it will
+    # be {JM::Pipe#slurp}ed through all pipes. So at this central point, you can
+    # register custom pipes to take full control of the mapping process. Or you
+    # could just use one of the DSL methods, that build a thin layer on top of
+    # {#pipe}.
     #
-    # You are supposed to subclass this class and configure your mapper with the
-    # available configuration methods.
+    # You are supposed to subclass this class, configure your mapper with the
+    # available configuration methods and extend the DSL to fit your mapping
+    # processes.
     #
     # You should notice, that Mappers, in contrast to a lot of other ruby
     # libraries, are configured not with class methods but instance method calls
