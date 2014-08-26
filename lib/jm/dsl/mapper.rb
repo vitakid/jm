@@ -9,6 +9,14 @@ module JM
     #
     # You are supposed to subclass this class and configure your mapper with the
     # available configuration methods.
+    #
+    # You should notice, that Mappers, in contrast to a lot of other ruby
+    # libraries, are configured not with class methods but instance method calls
+    # in the constructor. This gives you the possibility to parameterize the
+    # configuration of the parent class without going to great lengths and doing
+    # lots of ruby trickery. A simple example would be a parent class for all
+    # mappers for HAL collection resources. In the derived classes you can
+    # easily pass things like URI templates and page numbers via `#super`.
     class Mapper < JM::Mapper
       # Initialize a Mapper
       #
