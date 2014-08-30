@@ -217,10 +217,7 @@ module JM
 
       # @api private
       def block_to_accessor(&block)
-        accessor_class = Class.new(JM::Accessor)
-        accessor_class.class_exec(&block)
-
-        accessor_class.new
+        InlineAccessor.new(&block)
       end
 
       # @api private
@@ -238,10 +235,7 @@ module JM
 
       # @api private
       def block_to_mapper(&block)
-        accessor_class = Class.new(JM::Mapper)
-        accessor_class.class_exec(&block)
-
-        accessor_class.new
+        InlineMapper.new(&block)
       end
     end
   end

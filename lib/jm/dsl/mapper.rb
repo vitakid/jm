@@ -94,9 +94,7 @@ module JM
                    **rest,
                    &block)
         if block
-          accessor_class = Class.new(Accessor)
-          accessor_class.class_eval(&block)
-          accessor = accessor_class.new
+          accessor = InlineAccessor.new(&block)
         end
 
         args = {

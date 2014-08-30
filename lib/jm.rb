@@ -27,6 +27,8 @@ require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"
 require "jm/hal/embedded_accessor"
 
+require "jm/dsl/inline_accessor"
+require "jm/dsl/inline_mapper"
 require "jm/dsl/mapper"
 require "jm/dsl/self_link_wrapper"
 require "jm/dsl/template_params_accessor"
