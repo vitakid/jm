@@ -9,6 +9,7 @@
   - [Accessors](#accessors)
   - [Mapper](#mapper)
   - [Pipes](#pipes)
+- [Documentation](#documentation)
 - [Installation](#installation)
 - [Contributing](#contributing)
 
@@ -210,7 +211,7 @@ person
 ## Documentation
 
 You can find the DSL documentation directly
-[in the code](lib/jm/dsl). Alternatively you can execute to the following shell
+[in the code](lib/jm/dsl). Alternatively you can execute the following shell
 script to generate the docs and view them
 [in your browser](http://localhost:8000).
 
