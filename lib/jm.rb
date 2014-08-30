@@ -1,5 +1,10 @@
 require "jm/exception"
 
+require "jm/result"
+require "jm/success"
+require "jm/failure"
+require "jm/error"
+
 require "jm/mapper"
 require "jm/mappers/identity_mapper"
 require "jm/mappers/array_mapper"
