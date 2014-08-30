@@ -9,13 +9,20 @@ module JM
       end
 
       def read(link)
-        @uri_template.extract(link["href"])
+        href = link["href"]
+        params = @uri_template.extract(href)
+
+        if params
+          Success.new(params)
+        else
+          Failure.new(Errors::InvalidLinkError.new(@uri_template.pattern, href))
+        end
       end
 
       def write(params)
         href = @uri_template.expand(params).to_s
 
-        { "href" => href }
+        Success.new("href" => href)
       end
     end
   end

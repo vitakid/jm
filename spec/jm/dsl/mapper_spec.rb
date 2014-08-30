@@ -23,7 +23,7 @@ describe JM::DSL::Mapper do
 
         hash = mapper.new.write(p)
 
-        expect(hash).to eq(first_name: "Marten", last_name: "Lienen")
+        expect(hash).to succeed_with(first_name: "Marten", last_name: "Lienen")
       end
     end
 
@@ -33,7 +33,7 @@ describe JM::DSL::Mapper do
 
         p = mapper.new.read(hash)
 
-        expect(p).to eq(person.new("Marten", "Lienen"))
+        expect(p).to succeed_with(person.new("Marten", "Lienen"))
       end
     end
   end
@@ -62,7 +62,7 @@ describe JM::DSL::Mapper do
 
       hash = person_mapper.new.write(person)
 
-      expect(hash).to eq(name: "Frodo", age: 50)
+      expect(hash).to succeed_with(name: "Frodo", age: 50)
     end
 
     it "should not read the property" do
@@ -70,7 +70,7 @@ describe JM::DSL::Mapper do
 
       person = person_mapper.new.read(hash)
 
-      expect(person).to eq(person_class.new("Frodo", nil))
+      expect(person).to succeed_with(person_class.new("Frodo", nil))
     end
   end
 
@@ -101,7 +101,7 @@ describe JM::DSL::Mapper do
 
         hash = person_mapper.new.write(person)
 
-        expect(hash).to eq(name: "Marten", age: 21)
+        expect(hash).to succeed_with(name: "Marten", age: 21)
       end
 
       it "should not write the property, if the condition fails" do
@@ -109,7 +109,7 @@ describe JM::DSL::Mapper do
 
         hash = person_mapper.new.write(person)
 
-        expect(hash).to eq(name: "Alex")
+        expect(hash).to succeed_with(name: "Alex")
       end
     end
 
@@ -119,7 +119,7 @@ describe JM::DSL::Mapper do
 
         person = person_mapper.new.read(hash)
 
-        expect(person).to eq(person_class.new("Alex", 14))
+        expect(person).to succeed_with(person_class.new("Alex", 14))
       end
 
       it "should not read the property, if the condition fails" do
@@ -127,7 +127,7 @@ describe JM::DSL::Mapper do
 
         person = person_mapper.new.read(hash)
 
-        expect(person).to eq(person_class.new("Marten", nil))
+        expect(person).to succeed_with(person_class.new("Marten", nil))
       end
     end
   end
@@ -156,7 +156,7 @@ describe JM::DSL::Mapper do
 
       hash = person_mapper.new.write(person)
 
-      expect(hash).to eq(name: "Marten, 21")
+      expect(hash).to succeed_with(name: "Marten, 21")
     end
 
     it "should be read-only" do
@@ -164,7 +164,7 @@ describe JM::DSL::Mapper do
 
       person = person_mapper.new.read(hash)
 
-      expect(person).to eq(person_class.new(nil, nil))
+      expect(person).to succeed_with(person_class.new(nil, nil))
     end
   end
 
@@ -190,6 +190,8 @@ describe JM::DSL::Mapper do
 
               person.name = name
               person.age = age.to_i
+
+              person
             end
           end
         end
@@ -202,7 +204,7 @@ describe JM::DSL::Mapper do
 
         hash = person_mapper.new.write(person)
 
-        expect(hash).to eq(name: "James (49)")
+        expect(hash).to succeed_with(name: "James (49)")
       end
     end
 
@@ -212,7 +214,7 @@ describe JM::DSL::Mapper do
 
         person = person_mapper.new.read(hash)
 
-        expect(person).to eq(person_class.new("James", 49))
+        expect(person).to succeed_with(person_class.new("James", 49))
       end
     end
   end
@@ -257,7 +259,8 @@ describe JM::DSL::Mapper do
 
         hash = mapper.new.write(comm)
 
-        expect(hash).to eq(people: [{ name: "Marten" }, { name: "Lienen" }])
+        expect(hash).to succeed_with(people: [{ name: "Marten" },
+                                              { name: "Lienen" }])
       end
     end
 
@@ -267,8 +270,8 @@ describe JM::DSL::Mapper do
 
         comm = mapper.new.read(hash)
 
-        expect(comm).to eq(community.new([person.new("Marten"),
-                                          person.new("Lienen")]))
+        expect(comm).to succeed_with(community.new([person.new("Marten"),
+                                                    person.new("Lienen")]))
       end
     end
 
@@ -292,7 +295,7 @@ describe JM::DSL::Mapper do
 
       hash = community_mapper.write(c)
 
-      expect(hash).to eq(persons: [{ name: "A" }])
+      expect(hash).to succeed_with(persons: [{ name: "A" }])
     end
   end
 end

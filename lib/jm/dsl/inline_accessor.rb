@@ -2,6 +2,9 @@ module JM
   module DSL
     # Use a block to define an accessor
     #
+    # It also wraps the return value in a {Success}, if it is not already a
+    # {Result}.
+    #
     # @example
     #   InlineAccessor.new do
     #     def get(object)
@@ -18,11 +21,11 @@ module JM
       end
 
       def get(object)
-        @accessor.get(object)
+        Result.wrap(@accessor.get(object))
       end
 
       def set(object, value)
-        @accessor.set(object, value)
+        Result.wrap(@accessor.set(object, value))
       end
     end
   end

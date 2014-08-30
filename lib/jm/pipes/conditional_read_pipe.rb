@@ -14,6 +14,8 @@ module JM
       def slurp(source, target)
         if @condition.call(target)
           @pipe.slurp(source, target)
+        else
+          Success.new(source)
         end
       end
     end

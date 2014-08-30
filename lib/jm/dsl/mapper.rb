@@ -123,7 +123,7 @@ module JM
       def read_only_property(name, **args, &block)
         accessor_class = Class.new(Accessor) do
           define_method(:get) do |object|
-            block.call(object)
+            Success.new(block.call(object))
           end
         end
 
@@ -163,8 +163,10 @@ module JM
       def write(object)
         target = instantiate_target(object)
 
-        @pipes.each_with_object(target) do |pipe, t|
-          pipe.pipe(object, t)
+        @pipes.reduce(target) do |result, pipe|
+          result.map do |t|
+            pipe.pipe(object, t)
+          end
         end
       end
 
@@ -172,8 +174,10 @@ module JM
       def read(target)
         source = instantiate_source(target)
 
-        @pipes.each_with_object(source) do |pipe, s|
-          pipe.slurp(s, target)
+        @pipes.reduce(source) do |result, pipe|
+          result.map do |s|
+            pipe.slurp(s, target)
+          end
         end
       end
 

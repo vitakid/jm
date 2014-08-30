@@ -3,7 +3,14 @@ require "jm/exception"
 require "jm/result"
 require "jm/success"
 require "jm/failure"
+
 require "jm/error"
+require "jm/errors/missing_getter_error"
+require "jm/errors/missing_setter_error"
+require "jm/errors/missing_key_error"
+require "jm/errors/unexpected_type_error"
+
+require "jm/results/array_reducer"
 
 require "jm/mapper"
 require "jm/mappers/identity_mapper"

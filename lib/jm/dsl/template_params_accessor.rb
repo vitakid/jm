@@ -18,15 +18,19 @@ module JM
       end
 
       def get(object)
-        @getters.map do |getter|
+        params = @getters.map do |getter|
           [getter, object.send(getter)]
         end.to_h
+
+        Success.new(params)
       end
 
       def set(object, params)
         params.map do |param, value|
           object.send(@setters[param], value)
         end
+
+        Success.new(object)
       end
     end
   end

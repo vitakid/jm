@@ -2,6 +2,9 @@ module JM
   module DSL
     # Use a block to define a mapper
     #
+    # It also wraps the return values in a {Success}, if it is not already a
+    # {Result}.
+    #
     # @example
     #   InlineMapper.new do
     #     def read(right)
@@ -18,11 +21,11 @@ module JM
       end
 
       def read(right)
-        @mapper.read(right)
+        Result.wrap(@mapper.read(right))
       end
 
       def write(left)
-        @mapper.write(left)
+        Result.wrap(@mapper.write(left))
       end
     end
   end

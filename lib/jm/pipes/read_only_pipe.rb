@@ -11,6 +11,7 @@ module JM
       end
 
       def slurp(source, target)
+        Success.new(source)
       end
     end
   end

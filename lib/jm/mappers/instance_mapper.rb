@@ -8,11 +8,11 @@ module JM
       end
 
       def read(target)
-        @source_class.new
+        Success.new(@source_class.new)
       end
 
       def write(source)
-        @target_class.new
+        Success.new(@target_class.new)
       end
     end
   end

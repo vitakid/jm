@@ -24,5 +24,16 @@ module JM
     # @yield [Object] The contained value
     def map(&block)
     end
+
+    # Wrap an object in a {Result}, if it is not one already
+    #
+    # @api private
+    def self.wrap(result)
+      if result.is_a?(Result)
+        result
+      else
+        Success.new(result)
+      end
+    end
   end
 end

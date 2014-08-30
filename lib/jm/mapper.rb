@@ -29,14 +29,14 @@ module JM
     # Map an object from right to left
     #
     # @param [Object] object The right representation of an object
-    # @return [Object] The left representation of object
+    # @return [Result] The left representation of object
     def read(object)
     end
 
     # Map an object from left to right
     #
     # @param [Object] object The left representation of an object
-    # @return [Object] The right representation of object
+    # @return [Result] The right representation of object
     def write(object)
     end
   end

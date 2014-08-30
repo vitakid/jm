@@ -15,14 +15,17 @@ module JM
     # Read some data from object
     #
     # @param [Object] object Object to read from
-    # @return [Object] Read data
+    # @return [Result] Read data
     def get(object)
     end
 
     # Write some data to object
     #
+    # This SHOULD not modify `object`, if it fails.
+    #
     # @param [Object] object Object to write to
     # @param [Object] value Value to write
+    # @return [Result] object with value set
     def set(object, value)
     end
   end
