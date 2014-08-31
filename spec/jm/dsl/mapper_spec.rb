@@ -174,18 +174,18 @@ describe JM::DSL::Mapper do
     end
 
     let(:person_mapper) do
-      person = person_class
+      person_cls = person_class
 
       Class.new(JM::DSL::Mapper) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person, Hash))
+          super(JM::Mappers::InstanceMapper.new(person_cls, Hash))
 
           property :name do
-            def get(person)
+            get do |person|
               "#{person.name} (#{person.age})"
             end
 
-            def set(person, value)
+            set do |person, value|
               name, age = /(.+) \(([0-9]+)\)/.match(value).captures
 
               person.name = name
@@ -283,7 +283,7 @@ describe JM::DSL::Mapper do
           super(JM::Mappers::InstanceMapper.new(person_class, Hash))
 
           array :persons, person_m do
-            def get(community)
+            get do |community|
               community.people
             end
           end

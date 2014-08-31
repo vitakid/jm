@@ -28,11 +28,11 @@ class PetMapper < JM::DSL::HALMapper
     super(Pet)
 
     self_link "/pets/{name}" do
-      def read(params)
+      read do |params|
         Pet.new(params["name"])
       end
 
-      def write(pet)
+      write do |pet|
         { name: pet.name }
       end
     end
@@ -47,11 +47,11 @@ class PersonMapper < JM::DSL::HALMapper
     super(Person)
 
     self_link "/people/{name}" do
-      def read(params)
+      read do |params|
         Person.new(params["name"])
       end
 
-      def write(person)
+      write do |person|
         { name: person.name }
       end
     end

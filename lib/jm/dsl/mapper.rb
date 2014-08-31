@@ -72,39 +72,34 @@ module JM
       #   property :name
       # @example Define an accessor inline
       #   property :name do
-      #     def get(source)
+      #     get do |source|
       #       # Implement custom getting
       #       source.special_read_method
       #     end
       #
-      #     def set(source, value)
+      #     set do |source, value|
       #       # Implement custom setting
       #       source.special_write_method(value)
       #     end
       #   end
-      #
       # @param [Symbol] name Property to map
       # @param [JM::Accessor] accessor Customize, how the source is accessed
-      # @param [JM::Mapper] mapper
+      # @param [JM::Mapper] mapper Convert the value during mapping
       # @param [Hash] rest Other options are passed to {#pipe}
-      # @param block Define an accessor inline
+      # @param block Define accessor and/or mapper inline
+      # @see PropertyConfiguration
       def property(name,
                    accessor: Accessors::AccessorAccessor.new(name),
-                   mapper: nil,
+                   mapper: Mappers::IdentityMapper.new,
                    **rest,
                    &block)
-        if block
-          accessor = InlineAccessor.new(&block)
-        end
+        configuration = PropertyConfiguration.new(&block)
 
         args = {
-          source_accessor: accessor,
+          source_accessor: configuration.accessor(accessor),
+          mapper: configuration.mapper(mapper),
           target_accessor: Accessors::HashKeyAccessor.new(name)
         }
-
-        if mapper
-          args[:mapper] = mapper
-        end
 
         p = Pipes::CompositePipe.new(**args)
 
