@@ -156,22 +156,44 @@ module JM
 
       # Write by piping the source through all registered pipes
       def write(object)
-        target = instantiate_target(object)
+        target_res = instantiate_target(object)
 
-        @pipes.reduce(target) do |result, pipe|
-          result.map do |t|
-            pipe.pipe(object, t)
+        target_res.map do |target|
+          obj, failure = @pipes.reduce([target, Failure.new]) do |(t, f), pipe|
+            res = pipe.pipe(object, t)
+
+            case res
+            when Success then [res.value, f]
+            when Failure then [t, f + res]
+            end
+          end
+
+          if failure.errors.length > 0
+            failure
+          else
+            Success.new(obj)
           end
         end
       end
 
       # Read by slurping the target through all registered pipes
       def read(target)
-        source = instantiate_source(target)
+        source_res = instantiate_source(target)
 
-        @pipes.reduce(source) do |result, pipe|
-          result.map do |s|
-            pipe.slurp(s, target)
+        source_res.map do |source|
+          obj, failure = @pipes.reduce([source, Failure.new]) do |(s, f), pipe|
+            res = pipe.slurp(s, target)
+
+            case res
+            when Success then [res.value, f]
+            when Failure then [s, f + res]
+            end
+          end
+
+          if failure.errors.length > 0
+            failure
+          else
+            Success.new(obj)
           end
         end
       end

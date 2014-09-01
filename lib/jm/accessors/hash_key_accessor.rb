@@ -8,9 +8,9 @@ module JM
 
       def get(hash)
         if !hash.is_a?(Hash)
-          Failure.new(Errors::UnexpectedTypeError.new(Hash, hash.class))
+          Failure.new(Errors::UnexpectedTypeError.new([], Hash, hash.class))
         elsif !hash.key?(@key)
-          Failure.new(Errors::MissingKeyError.new(@key))
+          Failure.new(Errors::MissingKeyError.new([@key], @key))
         else
           Success.new(hash[@key])
         end
@@ -18,7 +18,7 @@ module JM
 
       def set(hash, data)
         if !hash.is_a?(Hash)
-          Failure.new(Errors::UnexpectedTypeError.new(Hash, hash.class))
+          Failure.new(Errors::UnexpectedTypeError.new([], Hash, hash.class))
         else
           hash[@key] = data
 

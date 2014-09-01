@@ -15,7 +15,7 @@ module JM
         if params
           Success.new(params)
         else
-          Failure.new(Errors::InvalidLinkError.new(@uri_template.pattern, href))
+          Failure.new(Errors::InvalidLinkError.new([], @uri_template.pattern, href))
         end
       end
 

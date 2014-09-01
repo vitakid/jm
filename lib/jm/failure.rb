@@ -19,6 +19,14 @@ module JM
       Failure.new(@errors + other.errors)
     end
 
+    # Prepend a path to all errors (sink them deeper into a structure)
+    #
+    # @param [Array] path Path to prepend
+    # @return [Failure] Failure with sunken errors
+    def sink(path)
+      Failure.new(@errors.map { |e| e.sink(path) })
+    end
+
     # Return self
     #
     # Mapping over a failure is a noop, because you cannot proceed computations

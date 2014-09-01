@@ -10,7 +10,7 @@ module JM
 
       def get(object)
         if !object.respond_to?(@getter)
-          Failure.new(Errors::MissingGetterError.new(object, @getter))
+          Failure.new(Errors::MissingGetterError.new([], object, @getter))
         else
           Success.new(object.send(@getter))
         end
@@ -18,7 +18,7 @@ module JM
 
       def set(object, data)
         if !object.respond_to?(@setter)
-          Failure.new(Errors::MissingSetterError.new(object, @setter))
+          Failure.new(Errors::MissingSetterError.new([], object, @setter))
         else
           object.send(@setter, data)
 

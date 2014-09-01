@@ -17,7 +17,7 @@ describe JM::DSL::Mapper do
       Struct.new(:first_name, :last_name)
     end
 
-    context "when mapping to a hash" do
+    context "to a hash" do
       it "should map properties to keys" do
         p = person.new("Marten", "Lienen")
 
@@ -27,7 +27,7 @@ describe JM::DSL::Mapper do
       end
     end
 
-    context "when mapping from a hash" do
+    context "from a hash" do
       it "should map keys to properties" do
         hash = { first_name: "Marten", last_name: "Lienen" }
 

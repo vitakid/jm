@@ -14,11 +14,11 @@ describe JM::Mappers::MapperChain do
   let(:failing_mapper) do
     Class.new(JM::Mapper) do
       def write(value)
-        JM::Failure.new(JM::Error.new(:fail))
+        JM::Failure.new(JM::Error.new([], :fail))
       end
 
       def read(value)
-        JM::Failure.new(JM::Error.new(:fail))
+        JM::Failure.new(JM::Error.new([], :fail))
       end
     end
   end
@@ -44,7 +44,7 @@ describe JM::Mappers::MapperChain do
         ]
       )
 
-      expect(chain.read(5)).to fail_with(JM::Error.new(:fail))
+      expect(chain.read(5)).to fail_with(JM::Error.new([], :fail))
     end
   end
 
@@ -69,7 +69,7 @@ describe JM::Mappers::MapperChain do
         ]
       )
 
-      expect(chain.write(5)).to fail_with(JM::Error.new(:fail))
+      expect(chain.write(5)).to fail_with(JM::Error.new([], :fail))
     end
   end
 end
