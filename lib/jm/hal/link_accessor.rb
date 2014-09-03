@@ -2,22 +2,24 @@ module JM
   module HAL
     # Access HAL links by rel in HAL hashes
     class LinkAccessor < Accessor
+      LINK_ACCESSOR = Accessors::HashKeyAccessor.new("_links")
+
       def initialize(rel)
-        @rel = rel.to_s
+        @rel_accessor = Accessors::HashKeyAccessor.new(rel.to_s)
       end
 
       def get(hash)
-        links = hash["_links"]
-
-        if links
-          links[@rel]
+        LINK_ACCESSOR.get(hash).map do |links|
+          @rel_accessor.get(links)
         end
       end
 
       def set(hash, link)
         hash["_links"] ||= {}
 
-        hash["_links"][@rel] = link
+        @rel_accessor.set(hash["_links"], link).map do
+          Success.new(hash)
+        end
       end
     end
   end

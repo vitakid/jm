@@ -72,45 +72,33 @@ module JM
       #   property :name
       # @example Define an accessor inline
       #   property :name do
-      #     def get(source)
+      #     get do |source|
       #       # Implement custom getting
       #       source.special_read_method
       #     end
       #
-      #     def set(source, value)
+      #     set do |source, value|
       #       # Implement custom setting
       #       source.special_write_method(value)
       #     end
       #   end
-      #
       # @param [Symbol] name Property to map
       # @param [JM::Accessor] accessor Customize, how the source is accessed
-      # @param [JM::Mapper] mapper
-      # @param [Hash] rest Other options are passed to {#pipe}
-      # @param block Define an accessor inline
+      # @param [JM::Mapper] mapper Convert the value during mapping
+      # @param [JM::Validator] validator Validate the value
+      # @param [Hash] args Other options are passed to {#pipe}
+      # @param block Configure the {PropertyBuilder}
+      # @see PropertyBuilder
       def property(name,
                    accessor: Accessors::AccessorAccessor.new(name),
-                   mapper: nil,
-                   **rest,
+                   mapper: Mappers::IdentityMapper.new,
+                   validator: nil,
+                   **args,
                    &block)
-        if block
-          accessor_class = Class.new(Accessor)
-          accessor_class.class_eval(&block)
-          accessor = accessor_class.new
-        end
+        builder = PropertyBuilder.new(name, accessor, validator, mapper)
+        builder.configure(&block)
 
-        args = {
-          source_accessor: accessor,
-          target_accessor: Accessors::HashKeyAccessor.new(name)
-        }
-
-        if mapper
-          args[:mapper] = mapper
-        end
-
-        p = Pipes::CompositePipe.new(**args)
-
-        pipe(p, **rest)
+        pipe(builder.to_pipe, **args)
       end
 
       # A shorthand to register read-only properties
@@ -125,7 +113,7 @@ module JM
       def read_only_property(name, **args, &block)
         accessor_class = Class.new(Accessor) do
           define_method(:get) do |object|
-            block.call(object)
+            Success.new(block.call(object))
           end
         end
 
@@ -150,32 +138,73 @@ module JM
       #     end
       #   end
       #
-      #   array :dates, ISOMapper.new
+      #   array :dates, mapper: ISOMapper.new
       # @param [Symbol] name Property to map
       # @param [JM::Mapper] mapper Mapper for individual array items
-      # @param [Hash] args Passed on to {#property}
-      # @param block Passed on to {#property}
-      def array(name, mapper, **args, &block)
-        args[:mapper] = JM::Mappers::ArrayMapper.new(mapper)
+      # @param [JM::Validator] validator Validate the whole array
+      # @param [JM::Validator] element_validator Validate individual array
+      #   elements
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Configure the {ArrayBuilder}
+      # @see ArrayBuilder
+      def array(name,
+                accessor: Accessors::AccessorAccessor.new(name),
+                mapper: Mappers::IdentityMapper.new,
+                validator: nil,
+                element_validator: nil,
+                **args,
+                &block)
+        builder = ArrayBuilder.new(name,
+                                   accessor,
+                                   mapper,
+                                   validator,
+                                   element_validator)
+        builder.configure(&block)
 
-        property(name, **args, &block)
+        pipe(builder.to_pipe, **args)
       end
 
       # Write by piping the source through all registered pipes
       def write(object)
-        target = instantiate_target(object)
+        target_res = instantiate_target(object)
 
-        @pipes.each_with_object(target) do |pipe, t|
-          pipe.pipe(object, t)
+        target_res.map do |target|
+          obj, failure = @pipes.reduce([target, Failure.new]) do |(t, f), pipe|
+            res = pipe.pipe(object, t)
+
+            case res
+            when Success then [res.value, f]
+            when Failure then [t, f + res]
+            end
+          end
+
+          if failure.errors.length > 0
+            failure
+          else
+            Success.new(obj)
+          end
         end
       end
 
       # Read by slurping the target through all registered pipes
       def read(target)
-        source = instantiate_source(target)
+        source_res = instantiate_source(target)
 
-        @pipes.each_with_object(source) do |pipe, s|
-          pipe.slurp(s, target)
+        source_res.map do |source|
+          obj, failure = @pipes.reduce([source, Failure.new]) do |(s, f), pipe|
+            res = pipe.slurp(s, target)
+
+            case res
+            when Success then [res.value, f]
+            when Failure then [s, f + res]
+            end
+          end
+
+          if failure.errors.length > 0
+            failure
+          else
+            Success.new(obj)
+          end
         end
       end
 

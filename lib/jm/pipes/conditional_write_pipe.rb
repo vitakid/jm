@@ -10,6 +10,8 @@ module JM
       def pipe(source, target)
         if @condition.call(source)
           @pipe.pipe(source, target)
+        else
+          Success.new(target)
         end
       end
 

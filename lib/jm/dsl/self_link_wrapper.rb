@@ -13,9 +13,11 @@ module JM
 
       def write(object)
         if @mapper.self_link_mapper
-          link = @mapper.self_link_mapper.write(object)
+          result = @mapper.self_link_mapper.write(object)
 
-          { "_links" => { "self" => link } }
+          result.map do |link|
+            Success.new("_links" => { "self" => link })
+          end
         else
           @fallback.write(object)
         end

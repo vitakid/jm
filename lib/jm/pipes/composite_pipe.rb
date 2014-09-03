@@ -13,15 +13,19 @@ module JM
       end
 
       def pipe(source, target)
-        value = @mapper.write(@source_accessor.get(source))
-
-        @target_accessor.set(target, value)
+        @source_accessor.get(source).map do |read|
+          @mapper.write(read).map do |mapped|
+            @target_accessor.set(target, mapped)
+          end
+        end
       end
 
       def slurp(source, target)
-        value = @mapper.read(@target_accessor.get(target))
-
-        @source_accessor.set(source, value)
+        @target_accessor.get(target).map do |read|
+          @mapper.read(read).map do |mapped|
+            @source_accessor.set(source, mapped)
+          end
+        end
       end
     end
   end

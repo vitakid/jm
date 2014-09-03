@@ -6,6 +6,7 @@
 
 - [Usage](#usage)
 - [Concepts](#concepts)
+  - [Success and Failure](#success-and-failure)
   - [Accessors](#accessors)
   - [Mapper](#mapper)
   - [Pipes](#pipes)
@@ -28,11 +29,11 @@ class PetMapper < JM::DSL::HALMapper
     super(Pet)
 
     self_link "/pets/{name}" do
-      def read(params)
+      read do |params|
         Pet.new(params["name"])
       end
 
-      def write(pet)
+      write do |pet|
         { name: pet.name }
       end
     end
@@ -47,11 +48,11 @@ class PersonMapper < JM::DSL::HALMapper
     super(Person)
 
     self_link "/people/{name}" do
-      def read(params)
+      read do |params|
         Person.new(params["name"])
       end
 
-      def write(person)
+      write do |person|
         { name: person.name }
       end
     end
@@ -110,6 +111,46 @@ gets more complex `jm` gets out of your way and you can pass an accessor, that
 reads by concatenating the `#first_name` and `#last_name` and writes by
 splitting the name at the last space and saves the values as first and last
 name.
+
+### Success and Failure
+
+But first you have to understand, that every operation could potentially
+fail. Reading a value from a hash could fail. Constructing an object from a
+string could fail. Your first thought might be, that raising an exception would
+be good fit for such a failure. It is not. A lot of the time, we are mapping
+user input to objects, and users need to here better error messages than
+"Something went wrong" or "Hey, you cannot be born in the future". Of course the
+second version is a step in the right direction, but for efficiency reasons, the
+user would like hear everything, that is wrong in his input, all at
+once. Therefore errors have to be accumulated through the whole process. We
+implement that by returning `JM::Result`s instead of returning values or raising
+exceptions. Normal return values are wrapped in `JM::Success` while errors are
+wrapped in a `JM::Failure`. Then throughout the whole mapping process, failures
+are merged and can be returned to the user/client.
+
+For example, we could read the `age` property of a hash.
+
+```ruby
+def age(person)
+  if person.key?("age")
+    JM::Success.new(person["age"])
+  else
+    JM::Failure.new(JM::Error.new(["age"], :missing_key, { hash: person }))
+  end
+end
+```
+
+A failure can be initialized with an error or an array of errors. And an error
+takes three parameters:
+
+- A path into the data structure. If you were mapping an array of numbers and
+  the 5th one was faulty, the path would reflect that. The path would be
+  `[4]`. Paths can also have multiple elements to point into nested data
+  structrues like `["data", :numbers, 4]`.
+- A symbol to distinguish the error from other error types
+- A hash of parameters
+
+These three can later be used to generate error messages.
 
 ### Accessors
 

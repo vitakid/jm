@@ -26,24 +26,24 @@ module JM
       #
       # @example
       #   self_link "/people/{name}" do
-      #     def read(params)
+      #     read do |params|
       #       Person.new(params["name"])
       #     end
       #
-      #     def write(person)
+      #     write do |person|
       #       { name: person.name }
       #     end
       #   end
       # @param [String] uri_template RFC6570 URI template
-      # @param [JM::Mapper] params_mapper Map source object to and from
+      # @param [JM::Mapper] mapper Map source object to and from
       #   template parameters
-      # @param block Define params_mapper inline
-      def self_link(uri_template, params_mapper: nil, &block)
-        params_mapper = mapper_or_die(params_mapper, &block)
-        link_mapper = HAL::LinkMapper.new(uri_template)
-        mapper = Mappers::MapperChain.new([params_mapper, link_mapper])
+      # @param block Define mapper inline
+      # @see SelfLinkBuilder
+      def self_link(uri_template, mapper: nil, &block)
+        builder = SelfLinkBuilder.new(uri_template, mapper)
+        builder.configure(&block)
 
-        @self_link_mapper = mapper
+        @self_link_mapper = builder.to_mapper
       end
 
       # @api private
@@ -70,11 +70,11 @@ module JM
       #
       # @example
       #   inline_link :pet, "/people/{person}/pets/{name}" do
-      #     def get(person)
+      #     get do |person|
       #       { person: person.name, name: person.pet.name }
       #     end
       #
-      #     def set(person, params)
+      #     set do |person, params|
       #       person.pet = Pet.new(params["name"])
       #     end
       #   end
@@ -84,22 +84,17 @@ module JM
       #   from source and write them back
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the params_accessor inline
+      # @see LinkBuilder
       def inline_link(rel,
                       uri_template,
                       params_accessor:
                         TemplateParamsAccessor.new(uri_template),
                       **args,
                       &block)
-        params_accessor = accessor_or_die(params_accessor, &block)
+        builder = LinkBuilder.new(rel, params_accessor, HAL::LinkMapper.new(uri_template))
+        builder.configure(&block)
 
-        link_mapper = HAL::LinkMapper.new(uri_template)
-        link_accessor = HAL::LinkAccessor.new(rel)
-
-        p = Pipes::CompositePipe.new(source_accessor: params_accessor,
-                                     mapper: link_mapper,
-                                     target_accessor: link_accessor)
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, **args)
       end
 
       # Link to a resource by reusing the "self" link of another mapper
@@ -110,20 +105,17 @@ module JM
       #   passed to the mapper
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor inline
+      # @see LinkBuilder
       def mapper_link(rel,
                       mapper,
                       accessor:
                         Accessors::AccessorAccessor.new(rel),
                       **args,
                       &block)
-        accessor = accessor_or_die(accessor, &block)
-        link_accessor = HAL::LinkAccessor.new(rel)
+        builder = LinkBuilder.new(rel, accessor, mapper.self_link_mapper)
+        builder.configure(&block)
 
-        p = Pipes::CompositePipe.new(source_accessor: accessor,
-                                     mapper: mapper.self_link_mapper,
-                                     target_accessor: link_accessor)
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, **args)
       end
 
       # Link to an array of resources
@@ -133,16 +125,15 @@ module JM
       # @param [JM::Accessor] accessor Accessor for the array
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor inline
+      # @see LinkBuilder
       def links(rel, mapper, accessor: nil, **args, &block)
-        accessor = accessor_or_die(accessor, &block)
-        mapper = Mappers::ArrayMapper.new(mapper.self_link_mapper)
-        link_accessor = HAL::LinkAccessor.new(rel)
+        builder = LinkBuilder.new(rel,
+                                  accessor,
+                                  Mappers::ArrayMapper.new(
+                                    mapper.self_link_mapper))
+        builder.configure(&block)
 
-        p = Pipes::CompositePipe.new(source_accessor: accessor,
-                                     mapper: mapper,
-                                     target_accessor: link_accessor)
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, **args)
       end
 
       # Embed a resource
@@ -154,23 +145,18 @@ module JM
       # @param [JM::Mapper] mapper Mapper for the object
       # @param [JM::Accessor] accessor Accessor for the object
       # @param [Hash] args Passed on to {#pipe}
-      # @param block Define the accessor inline
+      # @param block Define the accessor and/or mapper inline
+      # @see EmbeddedBuilder
       def embedded(rel,
-                   mapper,
+                   mapper: nil,
                    accessor: Accessors::AccessorAccessor.new(rel),
                    read_only: true,
                    **args,
                    &block)
-        accessor = accessor_or_die(accessor, &block)
-        embedded_accessor = HAL::EmbeddedAccessor.new(rel)
+        builder = EmbeddedBuilder.new(rel, accessor, mapper)
+        builder.configure(&block)
 
-        p = Pipes::CompositePipe.new(source_accessor: accessor,
-                                     mapper: mapper,
-                                     target_accessor: embedded_accessor)
-
-        args[:read_only] = read_only
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, read_only: read_only, **args)
       end
 
       # Embed an array of resources
@@ -182,66 +168,18 @@ module JM
       # @param [JM::Mapper] mapper Mapper the array items
       # @param [JM::Accessor] accessor Accessor for the array
       # @param [Hash] args Passed on to {#pipe}
-      # @param block Define the accessor inline
+      # @param block Define the accessor and/or item mapper inline
+      # @see EmbeddedBuilder
       def embeddeds(rel,
-                    mapper,
+                    mapper: nil,
                     accessor: Accessors::AccessorAccessor.new(rel),
                     read_only: true,
                     **args,
                     &block)
-        accessor = accessor_or_die(accessor, &block)
-        mapper = Mappers::ArrayMapper.new(mapper)
-        embedded_accessor = HAL::EmbeddedAccessor.new(rel)
+        builder = EmbeddedsBuilder.new(rel, accessor, Mappers::ArrayMapper.new(mapper))
+        builder.configure(&block)
 
-        p = Pipes::CompositePipe.new(source_accessor: accessor,
-                                     mapper: mapper,
-                                     target_accessor: embedded_accessor)
-
-        args[:read_only] = read_only
-
-        pipe(p, **args)
-      end
-
-      # @api private
-      def accessor_or_die(accessor, &block)
-        if block
-          block_to_accessor(&block)
-        else
-          if accessor.nil?
-            raise JM::Exception.new("You have to supply some form of accessor")
-          else
-            accessor
-          end
-        end
-      end
-
-      # @api private
-      def block_to_accessor(&block)
-        accessor_class = Class.new(JM::Accessor)
-        accessor_class.class_exec(&block)
-
-        accessor_class.new
-      end
-
-      # @api private
-      def mapper_or_die(mapper, &block)
-        if block
-          block_to_mapper(&block)
-        else
-          if mapper.nil?
-            raise JM::Exception.new("You have to supply some form of mapper")
-          else
-            mapper
-          end
-        end
-      end
-
-      # @api private
-      def block_to_mapper(&block)
-        accessor_class = Class.new(JM::Mapper)
-        accessor_class.class_exec(&block)
-
-        accessor_class.new
+        pipe(builder.to_pipe, read_only: read_only, **args)
       end
     end
   end

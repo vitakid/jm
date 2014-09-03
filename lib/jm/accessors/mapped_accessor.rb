@@ -10,15 +10,15 @@ module JM
       end
 
       def get(object)
-        value = @accessor.get(object)
-
-        @mapper.read(value)
+        @accessor.get(object).map do |value|
+          @mapper.read(value)
+        end
       end
 
       def set(object, value)
-        @accessor.set(object, @mapper.write(value))
-
-        object
+        @mapper.write(value).map do |v|
+          @accessor.set(object, v)
+        end
       end
     end
   end

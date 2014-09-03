@@ -6,11 +6,11 @@ module JM
     # is expected.
     class IdentityMapper < Mapper
       def read(object)
-        object
+        Success.new(object)
       end
 
       def write(object)
-        object
+        Success.new(object)
       end
     end
   end

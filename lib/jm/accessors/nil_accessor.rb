@@ -6,9 +6,11 @@ module JM
     # is expected.
     class NilAccessor < Accessor
       def get(object)
+        Success.new(nil)
       end
 
       def set(object, value)
+        Success.new(nil)
       end
     end
   end
