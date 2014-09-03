@@ -38,6 +38,7 @@ require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"
 require "jm/hal/embedded_accessor"
 
+require "jm/dsl/validator"
 require "jm/dsl/block_accessor"
 require "jm/dsl/block_mapper"
 require "jm/dsl/configuration"
