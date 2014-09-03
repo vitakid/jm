@@ -35,17 +35,15 @@ module JM
       #     end
       #   end
       # @param [String] uri_template RFC6570 URI template
-      # @param [JM::Mapper] params_mapper Map source object to and from
+      # @param [JM::Mapper] mapper Map source object to and from
       #   template parameters
-      # @param block Define params_mapper inline
-      # @see SelfLinkConfiguration
-      def self_link(uri_template, params_mapper: nil, &block)
-        config = SelfLinkConfiguration.new(&block)
-        params_mapper = config.mapper(params_mapper)
-        link_mapper = HAL::LinkMapper.new(uri_template)
-        mapper = Mappers::MapperChain.new([params_mapper, link_mapper])
+      # @param block Define mapper inline
+      # @see SelfLinkBuilder
+      def self_link(uri_template, mapper: nil, &block)
+        builder = SelfLinkBuilder.new(uri_template, mapper)
+        builder.configure(&block)
 
-        @self_link_mapper = mapper
+        @self_link_mapper = builder.to_mapper
       end
 
       # @api private
@@ -86,24 +84,17 @@ module JM
       #   from source and write them back
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the params_accessor inline
-      # @see LinkConfiguration
+      # @see LinkBuilder
       def inline_link(rel,
                       uri_template,
                       params_accessor:
                         TemplateParamsAccessor.new(uri_template),
                       **args,
                       &block)
-        config = LinkConfiguration.new(&block)
+        builder = LinkBuilder.new(rel, params_accessor, HAL::LinkMapper.new(uri_template))
+        builder.configure(&block)
 
-        p_config = {
-          source_accessor: config.accessor(params_accessor),
-          mapper: HAL::LinkMapper.new(uri_template),
-          target_accessor: HAL::LinkAccessor.new(rel)
-        }
-
-        p = Pipes::CompositePipe.new(p_config)
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, **args)
       end
 
       # Link to a resource by reusing the "self" link of another mapper
@@ -114,24 +105,17 @@ module JM
       #   passed to the mapper
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor inline
-      # @see LinkConfiguration
+      # @see LinkBuilder
       def mapper_link(rel,
                       mapper,
                       accessor:
                         Accessors::AccessorAccessor.new(rel),
                       **args,
                       &block)
-        config = LinkConfiguration.new(&block)
+        builder = LinkBuilder.new(rel, accessor, mapper.self_link_mapper)
+        builder.configure(&block)
 
-        p_config = {
-          source_accessor: config.accessor(accessor),
-          mapper: mapper.self_link_mapper,
-          target_accessor: HAL::LinkAccessor.new(rel)
-        }
-
-        p = Pipes::CompositePipe.new(p_config)
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, **args)
       end
 
       # Link to an array of resources
@@ -141,19 +125,15 @@ module JM
       # @param [JM::Accessor] accessor Accessor for the array
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor inline
-      # @see LinkConfiguration
+      # @see LinkBuilder
       def links(rel, mapper, accessor: nil, **args, &block)
-        config = LinkConfiguration.new(&block)
+        builder = LinkBuilder.new(rel,
+                                  accessor,
+                                  Mappers::ArrayMapper.new(
+                                    mapper.self_link_mapper))
+        builder.configure(&block)
 
-        p_config = {
-          source_accessor: config.accessor(accessor),
-          mapper: Mappers::ArrayMapper.new(mapper.self_link_mapper),
-          target_accessor: HAL::LinkAccessor.new(rel)
-        }
-
-        p = Pipes::CompositePipe.new(p_config)
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, **args)
       end
 
       # Embed a resource
@@ -166,27 +146,17 @@ module JM
       # @param [JM::Accessor] accessor Accessor for the object
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor and/or mapper inline
-      # @see EmbeddedConfiguration
+      # @see EmbeddedBuilder
       def embedded(rel,
                    mapper: nil,
                    accessor: Accessors::AccessorAccessor.new(rel),
                    read_only: true,
                    **args,
                    &block)
-        config = EmbeddedConfiguration.new(&block)
-        embedded_accessor = HAL::EmbeddedAccessor.new(rel)
+        builder = EmbeddedBuilder.new(rel, accessor, mapper)
+        builder.configure(&block)
 
-        p_config = {
-          source_accessor: config.accessor(accessor),
-          mapper: config.get_mapper(mapper),
-          target_accessor: embedded_accessor
-        }
-
-        p = Pipes::CompositePipe.new(p_config)
-
-        args[:read_only] = read_only
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, read_only: read_only, **args)
       end
 
       # Embed an array of resources
@@ -199,26 +169,17 @@ module JM
       # @param [JM::Accessor] accessor Accessor for the array
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor and/or item mapper inline
-      # @see EmbeddedConfiguration
+      # @see EmbeddedBuilder
       def embeddeds(rel,
                     mapper: nil,
                     accessor: Accessors::AccessorAccessor.new(rel),
                     read_only: true,
                     **args,
                     &block)
-        config = EmbeddedConfiguration.new(&block)
+        builder = EmbeddedsBuilder.new(rel, accessor, Mappers::ArrayMapper.new(mapper))
+        builder.configure(&block)
 
-        p_config = {
-          source_accessor: config.accessor(accessor),
-          mapper: Mappers::ArrayMapper.new(config.get_mapper(mapper)),
-          target_accessor: HAL::EmbeddedAccessor.new(rel)
-        }
-
-        p = Pipes::CompositePipe.new(p_config)
-
-        args[:read_only] = read_only
-
-        pipe(p, **args)
+        pipe(builder.to_pipe, read_only: read_only, **args)
       end
     end
   end

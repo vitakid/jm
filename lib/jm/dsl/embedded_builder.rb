@@ -1,14 +1,29 @@
 module JM
   module DSL
-    # Configuration for {JM::DSL::Mapper#embedded} and
-    # {JM::DSL::Mapper#embeddeds}
-    class EmbeddedConfiguration < Configuration
+    # Builder for pipes for embedding objects
+    class EmbeddedBuilder < Builder
+      def initialize(rel, accessor, mapper)
+        @rel = rel
+        @accessor = accessor
+        @mapper = mapper
+      end
+
       # Define how to read the value
+      #
+      # @example
+      #   get do |object|
+      #     object.value
+      #   end
       def get(&block)
         @get = block
       end
 
       # Define how to write the value
+      #
+      # @example
+      #   set do |object, value|
+      #     object.value = value
+      #   end
       def set(&block)
         @set = block
       end
@@ -28,26 +43,26 @@ module JM
         @mapper.instance_exec(&block)
       end
 
-      # @api private
-      def accessor(default)
+      def to_pipe
         if @get || @set
-          BlockAccessor.new(@get, @set)
-        elsif default
-          default
+          accessor = BlockAccessor.new(@get, @set)
+        elsif @accessor
+          accessor = @accessor
         else
           raise Exception.new("You have to pass an accessor")
         end
-      end
 
-      # @api private
-      def get_mapper(default)
-        if @mapper
-          @mapper
-        elsif default
-          default
-        else
+        if !@mapper
           raise Exception.new("You have to pass a mapper")
         end
+
+        config = {
+          source_accessor: accessor,
+          mapper: @mapper,
+          target_accessor: HAL::EmbeddedAccessor.new(@rel)
+        }
+
+        Pipes::CompositePipe.new(config)
       end
     end
   end
