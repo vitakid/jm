@@ -3,10 +3,12 @@ module JM
     # Reduce a [{Result}] to {Success}([]) or a {Failure}, if a result is one
     class ArrayReducer
       def reduce(array)
-        values, failures = array.each.with_index.reduce([[], Failure.new]) do |(vs, failures), (result, index)|
+        enumerator = array.each.with_index
+        acc = [[], Failure.new]
+        values, failures = enumerator.reduce(acc) do |(vs, fs), (result, index)|
           case result
-          when Success then [vs + [result.value], failures]
-          when Failure then [vs, failures + result.sink([index])]
+          when Success then [vs + [result.value], fs]
+          when Failure then [vs, fs + result.sink([index])]
           end
         end
 

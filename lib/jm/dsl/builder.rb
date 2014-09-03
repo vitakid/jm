@@ -1,17 +1,18 @@
 module JM
   module DSL
-    # A configuration object, that is configured by calling it's methods
+    # A builder object to allow users to configure things with blocks
     #
     # The intended use is to subclass this and then pass a user-given block to
-    # it's constructor.
+    # it's {#configure}.
     #
     # @example
-    #   SomeConfiguration.new do
+    #   builder = SomeBuilder.new
+    #
+    #   builder.configure do
     #     some_setting true
     #   end
-    class Configuration
-      # Initialize from a block
-      def initialize(&block)
+    class Builder
+      def configure(&block)
         if block
           instance_exec(&block)
         end

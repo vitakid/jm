@@ -85,25 +85,20 @@ module JM
       # @param [Symbol] name Property to map
       # @param [JM::Accessor] accessor Customize, how the source is accessed
       # @param [JM::Mapper] mapper Convert the value during mapping
-      # @param [Hash] rest Other options are passed to {#pipe}
-      # @param block Define accessor and/or mapper inline
-      # @see PropertyConfiguration
+      # @param [JM::Validator] validator Validate the value
+      # @param [Hash] args Other options are passed to {#pipe}
+      # @param block Configure the {PropertyBuilder}
+      # @see PropertyBuilder
       def property(name,
                    accessor: Accessors::AccessorAccessor.new(name),
                    mapper: Mappers::IdentityMapper.new,
-                   **rest,
+                   validator: nil,
+                   **args,
                    &block)
-        configuration = PropertyConfiguration.new(&block)
+        builder = PropertyBuilder.new(name, accessor, validator, mapper)
+        builder.configure(&block)
 
-        args = {
-          source_accessor: configuration.accessor(accessor),
-          mapper: configuration.mapper(mapper),
-          target_accessor: Accessors::HashKeyAccessor.new(name)
-        }
-
-        p = Pipes::CompositePipe.new(**args)
-
-        pipe(p, **rest)
+        pipe(builder.to_pipe, **args)
       end
 
       # A shorthand to register read-only properties
@@ -143,15 +138,30 @@ module JM
       #     end
       #   end
       #
-      #   array :dates, ISOMapper.new
+      #   array :dates, mapper: ISOMapper.new
       # @param [Symbol] name Property to map
       # @param [JM::Mapper] mapper Mapper for individual array items
-      # @param [Hash] args Passed on to {#property}
-      # @param block Passed on to {#property}
-      def array(name, mapper, **args, &block)
-        args[:mapper] = JM::Mappers::ArrayMapper.new(mapper)
+      # @param [JM::Validator] validator Validate the whole array
+      # @param [JM::Validator] element_validator Validate individual array
+      #   elements
+      # @param [Hash] args Passed on to {#pipe}
+      # @param block Configure the {ArrayBuilder}
+      # @see ArrayBuilder
+      def array(name,
+                accessor: Accessors::AccessorAccessor.new(name),
+                mapper: Mappers::IdentityMapper.new,
+                validator: nil,
+                element_validator: nil,
+                **args,
+                &block)
+        builder = ArrayBuilder.new(name,
+                                   accessor,
+                                   mapper,
+                                   validator,
+                                   element_validator)
+        builder.configure(&block)
 
-        property(name, **args, &block)
+        pipe(builder.to_pipe, **args)
       end
 
       # Write by piping the source through all registered pipes

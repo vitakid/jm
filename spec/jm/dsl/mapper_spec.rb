@@ -240,7 +240,7 @@ describe JM::DSL::Mapper do
         define_method(:initialize) do
           super(JM::Mappers::InstanceMapper.new(community_class, Hash))
 
-          array :people, m
+          array :people, mapper: m
         end
       end
     end
@@ -282,7 +282,7 @@ describe JM::DSL::Mapper do
         define_method(:initialize) do
           super(JM::Mappers::InstanceMapper.new(person_class, Hash))
 
-          array :persons, person_m do
+          array :persons, mapper: person_m do
             get do |community|
               community.people
             end
@@ -296,6 +296,269 @@ describe JM::DSL::Mapper do
       hash = community_mapper.write(c)
 
       expect(hash).to succeed_with(persons: [{ name: "A" }])
+    end
+  end
+
+  context "when mapping a validated property" do
+    let(:person) do
+      Struct.new(:name)
+    end
+
+    let(:person_mapper) do
+      person_class = person
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+
+          property :name do
+            validator do
+              inline do |name|
+                if name.length < 5
+                  JM::Failure.new(JM::Error.new([], :name_to_short))
+                else
+                  JM::Success.new(name)
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    context "from a hash" do
+      it "should fail if the validation fails" do
+        result = person_mapper.new.read(name: "Sven")
+
+        expect(result).to fail_with(JM::Error.new([:name], :name_to_short))
+      end
+
+      it "should succeed if the validation succeeds" do
+        result = person_mapper.new.read(name: "Marten")
+
+        expect(result).to succeed_with(person.new("Marten"))
+      end
+    end
+
+    context "to a hash" do
+      it "should fail if the validation fails" do
+        result = person_mapper.new.write(person.new("Sven"))
+
+        expect(result).to fail_with(JM::Error.new([:name], :name_to_short))
+      end
+
+      it "should succeed if the validation succeeds" do
+        result = person_mapper.new.write(person.new("Marten"))
+
+        expect(result).to succeed_with(name: "Marten")
+      end
+    end
+  end
+
+  context "when mapping multiple validated properties" do
+    let(:person) do
+      Struct.new(:name, :age)
+    end
+
+    let(:person_mapper) do
+      person_class = person
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+
+          property :name do
+            validator do
+              inline do
+                JM::Failure.new(JM::Error.new([], :too_short))
+              end
+            end
+          end
+
+          property :age do
+            validator do
+              inline do
+                JM::Failure.new(JM::Error.new([], :not_born_yet))
+              end
+            end
+          end
+        end
+      end
+    end
+
+    context "from a hash" do
+      it "should merge all failures" do
+        result = person_mapper.new.read(name: "M", age: -1)
+
+        expect(result).to fail_with([JM::Error.new([:name], :too_short),
+                                     JM::Error.new([:age], :not_born_yet)])
+      end
+    end
+
+    context "to a hash" do
+      it "should merge all failures" do
+        result = person_mapper.new.write(person.new("M", -1))
+
+        expect(result).to fail_with([JM::Error.new([:name], :too_short),
+                                     JM::Error.new([:age], :not_born_yet)])
+      end
+    end
+  end
+
+  context "when mapping an array property with validated elements" do
+    let(:container) do
+      Struct.new(:numbers)
+    end
+
+    let(:number_mapper) do
+      Class.new(JM::Mapper) do
+        def read(number)
+          if (5..9).include?(number)
+            JM::Failure.new(JM::Error.new([], :unwanted_number))
+          else
+            JM::Success.new(number)
+          end
+        end
+
+        alias_method :write, :read
+      end
+    end
+
+    let(:mapper) do
+      number_m = number_mapper
+      container_class = container
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+
+          array :numbers, mapper: number_m.new
+        end
+      end
+    end
+
+    context "from a hash" do
+      it "should prepend the errors with the indices" do
+        result = mapper.new.read(numbers: [2, 7, 3, 9])
+
+        errors = [JM::Error.new([:numbers, 1], :unwanted_number),
+                  JM::Error.new([:numbers, 3], :unwanted_number)]
+        expect(result).to fail_with(errors)
+      end
+    end
+  end
+
+  context "when mapping an array property with inline validated elements" do
+    let(:container) do
+      Struct.new(:numbers)
+    end
+
+    let(:mapper) do
+      container_class = container
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+
+          array :numbers do
+            element_validator do
+              inline do |number|
+                if number < 5
+                  JM::Failure.new(JM::Error.new([], :too_small))
+                else
+                  JM::Success.new(number)
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    context "from a hash" do
+      it "should prepend the errors with the indices" do
+        result = mapper.new.read(numbers: [2, 7, 3, 9])
+
+        expect(result).to fail_with([JM::Error.new([:numbers, 0], :too_small),
+                                     JM::Error.new([:numbers, 2], :too_small)])
+      end
+    end
+  end
+
+  context "when mapping an array property with an inline validator" do
+    let(:container) do
+      Struct.new(:numbers)
+    end
+
+    let(:mapper) do
+      container_class = container
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+
+          array :numbers, mapper: JM::Mappers::IdentityMapper.new do
+            validator do
+              inline do |numbers|
+                if numbers.length < 3
+                  JM::Failure.new(JM::Error.new([], :too_few))
+                else
+                  JM::Success.new(numbers)
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    context "from a hash" do
+      it "should fail if the validation fails" do
+        result = mapper.new.read(numbers: [1, 5])
+
+        expect(result).to fail_with(JM::Error.new([:numbers], :too_few))
+      end
+    end
+  end
+
+  context "when mapping an array property with an array validator" do
+    let(:container) do
+      Struct.new(:numbers)
+    end
+
+    let(:validator) do
+      Class.new(JM::Validator) do
+        def validate(array)
+          if array.length > 1
+            JM::Failure.new(JM::Error.new([], :too_many))
+          else
+            JM::Success.new(numbers)
+          end
+        end
+      end
+    end
+
+    let(:mapper) do
+      container_class = container
+      validator_class = validator
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+
+          array :numbers,
+                mapper: JM::Mappers::IdentityMapper.new,
+                validator: validator_class.new
+        end
+      end
+    end
+
+    context "from a hash" do
+      it "should fail if the validation fails" do
+        result = mapper.new.read(numbers: [1, 5])
+
+        expect(result).to fail_with(JM::Error.new([:numbers], :too_many))
+      end
     end
   end
 end
