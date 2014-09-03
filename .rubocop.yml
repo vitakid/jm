@@ -34,3 +34,7 @@ RaiseArgs:
 
 SignalException:
   Enabled: false
+
+# Allow unless as well as negated if
+NegatedIf:
+  Enabled: false
