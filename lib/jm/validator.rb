@@ -1,5 +1,7 @@
 module JM
   # Validates objects
+  #
+  # @see Validators::Predicate The most likely base class for custom validators
   class Validator
     # Validate an object
     #

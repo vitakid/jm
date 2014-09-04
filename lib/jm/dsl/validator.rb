@@ -23,9 +23,30 @@ module JM
 
       # Define a validator with a block
       #
+      # @example Verifying, that a string has at least 6 characters
+      #   inline do
+      #     if string.length > 5
+      #       JM::Success.new(string)
+      #     else
+      #       JM::Failure.new(JM::Error.new([], :too_short))
+      #     end
+      #   end
       # @param block Definition for {JM::Validator#validate}
       def inline(&block)
         validator(Validators::BlockValidator.new(&block))
+      end
+
+      # Define a predicate
+      #
+      # @example Verifying, that a string has at least 6 characters
+      #   predicate(JM::Error.new([], :too_short)) do |string|
+      #     string.length > 5
+      #   end
+      # @param [JM::Error, [JM::Error]] errors Errors to fail with, if the
+      #   predicate fails
+      # @param block Block, that checks the predicate
+      def predicate(errors, &block)
+        validator(Validators::Predicate.new(errors, &block))
       end
 
       # Validate an object by applying the registered validators

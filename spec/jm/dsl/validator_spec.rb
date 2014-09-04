@@ -19,7 +19,7 @@ describe JM::DSL::Validator do
     end
   end
 
-  describe "#inline" do
+  describe "with an inline validator" do
     let(:validator) do
       Class.new(JM::DSL::Validator) do
         def initialize
@@ -42,6 +42,32 @@ describe JM::DSL::Validator do
 
     it "should fail, when the block fails" do
       expect(validator.new.validate(1)).to fail_with(JM::Error.new([], :fail))
+    end
+  end
+
+  describe "with an inline predicate" do
+    let(:validator) do
+      Class.new(JM::DSL::Validator) do
+        def initialize
+          super
+
+          predicate(JM::Error.new([], :too_short)) do |string|
+            string.length > 5
+          end
+        end
+      end
+    end
+
+    it "should succeed, when the predicate is true" do
+      result = validator.new.validate("recursion")
+
+      expect(result).to succeed_with("recursion")
+    end
+
+    it "should fail, when the predicate is false" do
+      result = validator.new.validate("ruby")
+
+      expect(result).to fail_with(JM::Error.new([], :too_short))
     end
   end
 end

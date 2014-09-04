@@ -15,6 +15,7 @@ require "jm/errors/unexpected_type_error"
 require "jm/validator"
 require "jm/validators/identity_validator"
 require "jm/validators/block_validator"
+require "jm/validators/predicate"
 
 require "jm/mapper"
 require "jm/mappers/identity_mapper"
