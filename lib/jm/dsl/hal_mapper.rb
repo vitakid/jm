@@ -121,7 +121,8 @@ module JM
       # Link to an array of resources
       #
       # @param [Symbol] rel Link relation name
-      # @param [JM::Mapper] mapper Mapper, that is applied to all array items
+      # @param [JM::DSL::HALMapper] mapper Mapper, that is applied to all array
+      #   items
       # @param [JM::Accessor] accessor Accessor for the array
       # @param [Hash] args Passed on to {#pipe}
       # @param block Define the accessor inline
