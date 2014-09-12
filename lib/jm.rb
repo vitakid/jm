@@ -24,6 +24,7 @@ require "jm/mappers/instance_mapper"
 require "jm/mappers/mapper_chain"
 require "jm/mappers/validated_mapper"
 require "jm/mappers/sinking_mapper"
+require "jm/mappers/iso_8601_date_mapper"
 
 require "jm/accessor"
 require "jm/accessors/nil_accessor"
