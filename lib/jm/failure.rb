@@ -1,6 +1,11 @@
 module JM
   # A list of errors representing a failed operation
+  #
+  # Failures can be converted to JSON with {#to_json}, so that you can send the
+  # error messages back to the client.
   class Failure < Result
+    MAPPER = Mappers::FailureMapper.new
+
     # @return [[JM::Error]] Errors, that lead to the failure
     attr_reader :errors
 
@@ -35,6 +40,10 @@ module JM
     # @return This same failure
     def map(&block)
       self
+    end
+
+    def to_json
+      MAPPER.write(self).value.to_json
     end
 
     def ==(other)

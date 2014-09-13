@@ -1,9 +1,5 @@
 require "jm/exception"
 
-require "jm/result"
-require "jm/success"
-require "jm/failure"
-
 require "jm/results/array_reducer"
 
 require "jm/error"
@@ -56,6 +52,13 @@ require "jm/dsl/mapper"
 require "jm/dsl/self_link_wrapper"
 require "jm/dsl/template_params_accessor"
 require "jm/dsl/hal_mapper"
+
+require "jm/mappers/error_mapper"
+require "jm/mappers/failure_mapper"
+
+require "jm/result"
+require "jm/success"
+require "jm/failure"
 
 require "jm/version"
 
