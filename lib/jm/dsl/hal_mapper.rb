@@ -19,6 +19,11 @@ module JM
         super(name.to_s, *args, &block)
       end
 
+      # Map array properties to and from string names
+      def array(name, *args, &block)
+        super(name.to_s, *args, &block)
+      end
+
       # Configure the mapping to the URI for the "self" link relation
       #
       # During {#read} this mapping will be used to instantiate the source
