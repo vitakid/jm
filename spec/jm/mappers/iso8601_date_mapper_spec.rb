@@ -10,7 +10,7 @@ describe JM::Mappers::ISO8601DateMapper do
   end
 
   it "should fail, when the date string is invalid" do
-    errors = JM::Error.new([], :date_not_iso8601_compatible)
+    errors = JM::Errors::DateISO8601IncompatibleError.new([])
     expect(mapper.read("not-a-date")).to fail_with(errors)
   end
 end

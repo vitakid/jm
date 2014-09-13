@@ -1,0 +1,4 @@
+en:
+  jm:
+    errors:
+      date_iso8601_incompatible: "Please enter an ISO8601 compatible date"

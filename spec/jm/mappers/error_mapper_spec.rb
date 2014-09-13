@@ -1,16 +1,16 @@
 describe JM::Mappers::ErrorMapper do
   let(:mapper) { JM::Mappers::ErrorMapper.new }
 
-  before(:each) do
-    @backend = I18n.backend
-    I18n.backend = I18n::Backend::HashBackend.new
-  end
-
-  after(:each) do
-    I18n.backend = @backend
-  end
-
   describe "Adding messages" do
+    before(:each) do
+      @backend = I18n.backend
+      I18n.backend = I18n::Backend::HashBackend.new
+    end
+
+    after(:each) do
+      I18n.backend = @backend
+    end
+
     it "should add a nil 'messages' key, if there is no translation" do
       error = JM::Error.new([], :invalid)
 
@@ -87,6 +87,20 @@ describe JM::Mappers::ErrorMapper do
         "path" => %w(person age),
         "name" => :too_young,
         "message" => "5 is too young"
+      }
+      expect(result).to succeed_with(expected)
+    end
+
+    it "should use the gem-owned translations" do
+      I18n.backend = @backend
+      error = JM::Errors::DateISO8601IncompatibleError.new([])
+
+      result = mapper.write(error)
+
+      expected = {
+        "path" => [],
+        "name" => :date_iso8601_incompatible,
+        "message" => "Please enter an ISO8601 compatible date"
       }
       expect(result).to succeed_with(expected)
     end
