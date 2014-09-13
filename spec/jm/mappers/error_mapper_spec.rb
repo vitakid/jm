@@ -93,14 +93,14 @@ describe JM::Mappers::ErrorMapper do
 
     it "should use the gem-owned translations" do
       I18n.backend = @backend
-      error = JM::Errors::DateISO8601IncompatibleError.new([])
+      error = JM::Errors::DateISO8601IncompatibleError.new([], "not-compatible")
 
       result = mapper.write(error)
 
       expected = {
         "path" => [],
         "name" => :date_iso8601_incompatible,
-        "message" => "Please enter an ISO8601 compatible date"
+        "message" => "\"not-compatible\" is no ISO8601 compatible date"
       }
       expect(result).to succeed_with(expected)
     end

@@ -5,7 +5,7 @@ module JM
       def read(string)
         Success.new(Date.iso8601(string))
       rescue ArgumentError
-        Failure.new(Errors::DateISO8601IncompatibleError.new([]))
+        Failure.new(Errors::DateISO8601IncompatibleError.new([], string))
       end
 
       def write(date)
