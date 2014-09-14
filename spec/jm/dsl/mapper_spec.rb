@@ -88,7 +88,7 @@ describe JM::DSL::Mapper do
 
           property :name
 
-          property :age, optional: true do |*args|
+          property :age, optional: true do
             validator do
               predicate(JM::Error.new([], :too_young)) do |age|
                 age >= 0

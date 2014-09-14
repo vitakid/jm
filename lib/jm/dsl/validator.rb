@@ -44,9 +44,13 @@ module JM
       #   end
       # @param [JM::Error, [JM::Error]] errors Errors to fail with, if the
       #   predicate fails
-      # @param block Block, that checks the predicate
+      # @param block Should return true iff the value is **valid**
       def predicate(errors, &block)
         validator(Validators::Predicate.new(errors, &block))
+      end
+
+      def regexp(regexp)
+        validator(Validators::RegexpValidator.new(regexp))
       end
 
       # Validate an object by applying the registered validators

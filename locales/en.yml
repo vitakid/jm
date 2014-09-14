@@ -8,3 +8,4 @@ en:
       missing_getter: There is no getter "%{getter}"
       missing_setter: There is no setter "%{setter}"
       not_an_object: This should be an object
+      no_regexp_match: The input did not match the regexp "%{regexp}"

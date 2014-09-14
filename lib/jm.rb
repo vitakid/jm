@@ -10,11 +10,13 @@ require "jm/errors/not_an_object_error"
 require "jm/errors/unexpected_type_error"
 require "jm/errors/date_iso8601_incompatible_error"
 require "jm/errors/invalid_link_error"
+require "jm/errors/no_regexp_match_error"
 
 require "jm/validator"
 require "jm/validators/identity_validator"
 require "jm/validators/block_validator"
 require "jm/validators/predicate"
+require "jm/validators/regexp_validator"
 
 require "jm/mapper"
 require "jm/mappers/identity_mapper"

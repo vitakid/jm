@@ -19,7 +19,7 @@ describe JM::DSL::Validator do
     end
   end
 
-  describe "with an inline validator" do
+  context "with an inline validator" do
     let(:validator) do
       Class.new(JM::DSL::Validator) do
         def initialize
@@ -45,7 +45,7 @@ describe JM::DSL::Validator do
     end
   end
 
-  describe "with an inline predicate" do
+  context "with an inline predicate" do
     let(:validator) do
       Class.new(JM::DSL::Validator) do
         def initialize
@@ -68,6 +68,31 @@ describe JM::DSL::Validator do
       result = validator.new.validate("ruby")
 
       expect(result).to fail_with(JM::Error.new([], :too_short))
+    end
+  end
+
+  context "when validating with a regexp" do
+    let(:validator) do
+      Class.new(JM::DSL::Validator) do
+        def initialize
+          super
+
+          regexp /\A[0-9]-[a-r]\Z/
+        end
+      end
+    end
+
+    it "should succeed, when the regexp matches" do
+      result = validator.new.validate("1-g")
+
+      expect(result).to succeed_with("1-g")
+    end
+
+    it "should fail, when the regexp does not match" do
+      result = validator.new.validate("1-00")
+
+      error = JM::Errors::NoRegexpMatchError.new([], /\A[0-9]-[a-r]\Z/)
+      expect(result).to fail_with(error)
     end
   end
 end
