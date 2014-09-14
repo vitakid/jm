@@ -1,3 +1,31 @@
+RSpec.shared_examples "a validator DSL" do
+  let(:dsl) { -> {} }
+
+  let(:validator) do
+    block = dsl
+
+    Class.new(JM::DSL::Validator) do
+      define_method(:initialize) do
+        super()
+
+        instance_exec(&block)
+      end
+    end
+  end
+
+  it "should succeed, when the input is valid" do
+    result = validator.new.validate(valid)
+
+    expect(result).to succeed_with(valid)
+  end
+
+  it "should fail, when the input is invalid" do
+    result = validator.new.validate(invalid)
+
+    expect(result).to fail_with(error)
+  end
+end
+
 describe JM::DSL::Validator do
   describe "registering validators with #validator" do
     it "should register validators" do
@@ -20,11 +48,9 @@ describe JM::DSL::Validator do
   end
 
   context "with an inline validator" do
-    let(:validator) do
-      Class.new(JM::DSL::Validator) do
-        def initialize
-          super
-
+    it_behaves_like "a validator DSL" do
+      let(:dsl) do
+        lambda do
           inline do |value|
             if value > 10
               JM::Success.new(value)
@@ -34,65 +60,35 @@ describe JM::DSL::Validator do
           end
         end
       end
-    end
 
-    it "should succeed, when the block succeeds" do
-      expect(validator.new.validate(20)).to succeed_with(20)
-    end
-
-    it "should fail, when the block fails" do
-      expect(validator.new.validate(1)).to fail_with(JM::Error.new([], :fail))
+      let(:valid) { 20 }
+      let(:invalid) { 1 }
+      let(:error) { JM::Error.new([], :fail) }
     end
   end
 
   context "with an inline predicate" do
-    let(:validator) do
-      Class.new(JM::DSL::Validator) do
-        def initialize
-          super
-
+    it_behaves_like "a validator DSL" do
+      let(:dsl) do
+        lambda do
           predicate(JM::Error.new([], :too_short)) do |string|
             string.length > 5
           end
         end
       end
-    end
 
-    it "should succeed, when the predicate is true" do
-      result = validator.new.validate("recursion")
-
-      expect(result).to succeed_with("recursion")
-    end
-
-    it "should fail, when the predicate is false" do
-      result = validator.new.validate("ruby")
-
-      expect(result).to fail_with(JM::Error.new([], :too_short))
+      let(:valid) { "recursion" }
+      let(:invalid) { "ruby" }
+      let(:error) { JM::Error.new([], :too_short) }
     end
   end
 
   context "when validating with a regexp" do
-    let(:validator) do
-      Class.new(JM::DSL::Validator) do
-        def initialize
-          super
-
-          regexp /\A[0-9]-[a-r]\Z/
-        end
-      end
-    end
-
-    it "should succeed, when the regexp matches" do
-      result = validator.new.validate("1-g")
-
-      expect(result).to succeed_with("1-g")
-    end
-
-    it "should fail, when the regexp does not match" do
-      result = validator.new.validate("1-00")
-
-      error = JM::Errors::NoRegexpMatchError.new([], /\A[0-9]-[a-r]\Z/)
-      expect(result).to fail_with(error)
+    it_behaves_like "a validator DSL" do
+      let(:dsl) { -> { regexp(/\A[0-9]-[a-r]\Z/) } }
+      let(:valid) { "1-g" }
+      let(:invalid) { "1-00" }
+      let(:error) { JM::Errors::NoRegexpMatchError.new([], /\A[0-9]-[a-r]\Z/) }
     end
   end
 end
