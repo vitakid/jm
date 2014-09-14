@@ -74,6 +74,48 @@ describe JM::DSL::Mapper do
     end
   end
 
+  context "when mapping an optional property" do
+    let(:person_class) do
+      Struct.new(:name, :age)
+    end
+
+    let(:person_mapper) do
+      person = person_class
+
+      Class.new(JM::DSL::Mapper) do
+        define_method(:initialize) do
+          super(JM::Mappers::InstanceMapper.new(person, Hash))
+
+          property :name
+
+          property :age, optional: true do |*args|
+            validator do
+              predicate(JM::Error.new([], :too_young)) do |age|
+                age >= 0
+              end
+            end
+          end
+        end
+      end
+    end
+
+    it "should not validate the property, if it is absent" do
+      hash = { name: "Frodo" }
+
+      person = person_mapper.new.read(hash)
+
+      expect(person).to succeed_with(person_class.new("Frodo", nil))
+    end
+
+    it "should validate the property, if it has a value" do
+      hash = { name: "Frodo", age: -1 }
+
+      person = person_mapper.new.read(hash)
+
+      expect(person).to fail_with(JM::Error.new([:age], :too_young))
+    end
+  end
+
   context "when mapping a property conditionally" do
     let(:person_class) do
       Struct.new(:name, :age)

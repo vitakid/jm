@@ -2,11 +2,12 @@ module JM
   module DSL
     # Builder for a property pipe
     class PropertyBuilder < Builder
-      def initialize(name, accessor, validator, mapper)
+      def initialize(name, accessor, validator, mapper, optional)
         @name = name
         @accessor = accessor
         @validator = validator
         @mapper = mapper
+        @optional = optional
       end
 
       # Define how to read the property
@@ -80,7 +81,8 @@ module JM
         args = {
           source_accessor: accessor,
           mapper: mapper,
-          target_accessor: Accessors::HashKeyAccessor.new(@name)
+          target_accessor: Accessors::HashKeyAccessor.new(@name),
+          optional: @optional
         }
 
         Pipes::CompositePipe.new(**args)

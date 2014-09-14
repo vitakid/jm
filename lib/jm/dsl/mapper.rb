@@ -86,6 +86,8 @@ module JM
       # @param [JM::Accessor] accessor Customize, how the source is accessed
       # @param [JM::Mapper] mapper Convert the value during mapping
       # @param [JM::Validator] validator Validate the value
+      # @param [Bool] optional Is this property optional? Optional values are
+      #   not validated, if they are absent when reading.
       # @param [Hash] args Other options are passed to {#pipe}
       # @param block Configure the {PropertyBuilder}
       # @see PropertyBuilder
@@ -93,9 +95,11 @@ module JM
                    accessor: Accessors::AccessorAccessor.new(name),
                    mapper: Mappers::IdentityMapper.new,
                    validator: nil,
+                   optional: false,
                    **args,
                    &block)
-        builder = PropertyBuilder.new(name, accessor, validator, mapper)
+        builder = PropertyBuilder.new(
+          name, accessor, validator, mapper, optional)
         builder.configure(&block)
 
         pipe(builder.to_pipe, **args)

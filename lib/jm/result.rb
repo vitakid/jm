@@ -19,7 +19,7 @@ module JM
   # @see Success
   # @see Failure
   class Result
-    # Map the block over the contained value
+    # Map the block over the contained value of a {Success}
     #
     # @yield [Object] The contained value
     def map(&block)
