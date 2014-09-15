@@ -56,6 +56,13 @@ module JM
         validator(Validators::RegexpValidator.new(regexp))
       end
 
+      # Validate, that the length of string lies in a certain range
+      #
+      # @option args [Range] in Range of valid string lengths
+      def length(**args)
+        validator(Validators::LengthInRangeValidator.new(args[:in]))
+      end
+
       # Validate an object by applying the registered validators
       #
       # Validators are applied in registration order and validation fails with

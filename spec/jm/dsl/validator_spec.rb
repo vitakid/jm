@@ -91,4 +91,15 @@ describe JM::DSL::Validator do
       let(:error) { JM::Errors::NoRegexpMatchError.new([], /\A[0-9]-[a-r]\Z/) }
     end
   end
+
+  context "when validating the length with a range" do
+    it_behaves_like "a validator DSL" do
+      let(:dsl) { -> { length in: 5..10 } }
+      let(:valid) { "a" * 7 }
+      let(:invalid) { "a" * 15 }
+      let(:error) do
+        JM::Errors::StringLengthOutOfRangeError.new([], 5, 10)
+      end
+    end
+  end
 end
