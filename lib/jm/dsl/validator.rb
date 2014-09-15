@@ -49,6 +49,9 @@ module JM
         validator(Validators::Predicate.new(errors, &block))
       end
 
+      # Validate, that the input matches a regular expression
+      #
+      # @param [Regexp] regexp RegExp to match
       def regexp(regexp)
         validator(Validators::RegexpValidator.new(regexp))
       end
