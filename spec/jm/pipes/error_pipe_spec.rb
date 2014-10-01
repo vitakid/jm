@@ -1,5 +1,5 @@
-describe JM::Mappers::ErrorMapper do
-  let(:mapper) { JM::Mappers::ErrorMapper.new }
+describe JM::Pipes::ErrorPipe do
+  let(:pipe) { JM::Pipes::ErrorPipe.new }
 
   describe "Adding messages" do
     before(:each) do
@@ -14,7 +14,7 @@ describe JM::Mappers::ErrorMapper do
     it "should add a nil 'messages' key, if there is no translation" do
       error = JM::Error.new([], :invalid)
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => [], "name" => :invalid, "message" => nil
@@ -26,7 +26,7 @@ describe JM::Mappers::ErrorMapper do
       error = JM::Error.new([], :invalid)
       I18n.backend["jm.errors.invalid"] = "Invalid data"
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => [], "name" => :invalid, "message" => "Invalid data"
@@ -38,7 +38,7 @@ describe JM::Mappers::ErrorMapper do
       error = JM::Error.new(%w(nested path), :invalid)
       I18n.backend["jm.errors.nested.path.invalid"] = "Not valid"
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => %w(nested path),
@@ -52,7 +52,7 @@ describe JM::Mappers::ErrorMapper do
       error = JM::Error.new(%w(nested path), :invalid)
       I18n.backend["jm.errors.invalid"] = "Not valid"
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => %w(nested path),
@@ -67,7 +67,7 @@ describe JM::Mappers::ErrorMapper do
       I18n.backend["jm.errors.invalid"] = "Generally bad"
       I18n.backend["jm.errors.path.invalid"] = "Specifically bad"
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => %w(nested path),
@@ -81,7 +81,7 @@ describe JM::Mappers::ErrorMapper do
       error = JM::Error.new(%w(person age), :too_young, age: 5)
       I18n.backend["jm.errors.too_young"] = "%{age} is too young"
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => %w(person age),
@@ -95,7 +95,7 @@ describe JM::Mappers::ErrorMapper do
       I18n.backend = @backend
       error = JM::Errors::DateISO8601IncompatibleError.new([], "not-compatible")
 
-      result = mapper.write(error)
+      result = pipe.pump(error, {})
 
       expected = {
         "path" => [],

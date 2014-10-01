@@ -1,5 +1,5 @@
 module JM
-  module Mappers
+  module Pipes
     # Map {Error}s to JSON
     #
     # @example An example output
@@ -27,12 +27,15 @@ module JM
     #   # - jm.errors.person.age.too_young
     #   # - jm.errors.age.too_young
     #   # - jm.errors.too_young
-    class ErrorMapper < DSL::HALMapper
+    class ErrorPipe < DSL::HALPipe
       # The root scope for error messages
       SCOPE = %w(jm errors)
 
       def initialize
-        super(Error)
+        super
+
+        self.left_factory = Factories::NewFactory.new(Error)
+        self.right_factory = Factories::NewFactory.new(Hash)
 
         property :path
         property :name

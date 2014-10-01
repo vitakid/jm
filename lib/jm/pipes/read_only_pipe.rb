@@ -1,16 +1,16 @@
 module JM
   module Pipes
-    # Wraps another pipe and only forwards {#pipe} calls
+    # Wraps another pipe and only forwards {#pump} calls
     class ReadOnlyPipe < Pipe
       def initialize(pipe)
         @pipe = pipe
       end
 
-      def pipe(source, target)
-        @pipe.pipe(source, target)
+      def pump(source, target)
+        @pipe.pump(source, target)
       end
 
-      def slurp(source, target)
+      def suck(source, target)
         Success.new(source)
       end
     end

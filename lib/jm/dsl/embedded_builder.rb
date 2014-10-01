@@ -35,12 +35,12 @@ module JM
       #     property :name
       #     property :age
       #   end
-      # @param [Class] klass Class of the object to map (passed to
-      #   {HALMapper#initialize})
       # @param block Block to configure the mapper
-      def mapper(klass, &block)
-        @mapper = HALMapper.new(klass)
-        @mapper.instance_exec(&block)
+      def mapper(&block)
+        pipe = HALPipe.new
+        pipe.instance_exec(&block)
+
+        @mapper = pipe.to_mapper
       end
 
       def to_pipe

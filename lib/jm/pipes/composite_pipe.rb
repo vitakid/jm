@@ -14,7 +14,7 @@ module JM
         @optional = optional
       end
 
-      def pipe(source, target)
+      def pump(source, target)
         @source_accessor.get(source).map do |read|
           @mapper.write(read).map do |mapped|
             @target_accessor.set(target, mapped)
@@ -22,7 +22,7 @@ module JM
         end
       end
 
-      def slurp(source, target)
+      def suck(source, target)
         read_result = @target_accessor.get(target)
 
         case read_result

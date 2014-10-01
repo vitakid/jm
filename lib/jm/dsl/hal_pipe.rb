@@ -1,17 +1,11 @@
 module JM
   module DSL
     # An extended DSL with specialized methods for mapping to HAL
-    class HALMapper < DSL::Mapper
-      # Initialize a new HAL mapper
-      #
-      # @param [Class] klass Class of the object to be mapped. When you try to
-      #   {#read} a HAL resource without a "self" link, the mapper will
-      #   instantiate a new object with `klass.new` instead of {#self_link}.
-      def initialize(klass)
-        instance_mapper = JM::Mappers::InstanceMapper.new(klass, Hash)
-        link_mapper = JM::DSL::SelfLinkWrapper.new(self, instance_mapper)
+    class HALPipe < DSL::Pipe
+      def initialize
+        super
 
-        super(link_mapper)
+        self.right_factory = Factories::NewFactory.new(Hash)
       end
 
       # Map all properties to and from string names
@@ -26,8 +20,19 @@ module JM
 
       # Configure the mapping to the URI for the "self" link relation
       #
-      # During {#read} this mapping will be used to instantiate the source
-      # object before applying the pipes to it.
+      # The `read` block defines, how to map the parsed URI parameters to an
+      # object, while the `write` block defines, how to extract the URI
+      # parameters.
+      #
+      # Notice, that the `read` block is not used, when {#suck}ing data in. If
+      # you want to instantiate the object from the `self` link, you will have
+      # to do it yourself with `pipe.link_mapper.read(<self link>)` and the pass
+      # that object to {#suck}. The reason for this is, that the general use
+      # case for jm is assumed to be web APIs. So when you are receiving a PUT
+      # request to update some object, the object is determined by the request
+      # URI. If the actually instantiated object was determined by some URI in
+      # the request body, a user could update any object, even if he was only
+      # allowed access to a specific one, and so bypass your authorization.
       #
       # @example
       #   self_link "/people/{name}" do
@@ -48,12 +53,15 @@ module JM
         builder = SelfLinkBuilder.new(uri_template, mapper)
         builder.configure(&block)
 
-        @self_link_mapper = builder.to_mapper
+        @link_mapper = builder.to_mapper
+        self_accessor = HAL::LinkAccessor.new("self")
+        @link_accessor = Accessors::MappedAccessor.new(@link_mapper,
+                                                       self_accessor)
       end
 
       # @api private
-      def self_link_mapper
-        @self_link_mapper
+      def link_mapper
+        @link_mapper
       end
 
       # Link to a resource
@@ -117,7 +125,7 @@ module JM
                         Accessors::AccessorAccessor.new(rel),
                       **args,
                       &block)
-        builder = LinkBuilder.new(rel, accessor, mapper.self_link_mapper)
+        builder = LinkBuilder.new(rel, accessor, mapper.link_mapper)
         builder.configure(&block)
 
         pipe(builder.to_pipe, **args)
@@ -136,7 +144,7 @@ module JM
         builder = LinkBuilder.new(rel,
                                   accessor,
                                   Mappers::ArrayMapper.new(
-                                    mapper.self_link_mapper))
+                                    mapper.link_mapper))
         builder.configure(&block)
 
         pipe(builder.to_pipe, **args)
@@ -186,6 +194,18 @@ module JM
         builder.configure(&block)
 
         pipe(builder.to_pipe, read_only: read_only, **args)
+      end
+
+      def pump(source, target)
+        result = super(source, target)
+
+        if @link_accessor
+          result.map do |object|
+            @link_accessor.set(object, source)
+          end
+        else
+          result
+        end
       end
     end
   end

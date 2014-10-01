@@ -1,14 +1,16 @@
-describe JM::DSL::HALMapper do
+describe JM::DSL::HALPipe do
   let(:pet_class) do
     Struct.new(:name)
   end
 
-  let(:pet_mapper) do
+  let(:pet_pipe) do
     pet_cls = pet_class
 
-    Class.new(JM::DSL::HALMapper) do
+    Class.new(JM::DSL::HALPipe) do
       define_method(:initialize) do
-        super(pet_cls)
+        super()
+
+        self.left_factory = JM::Factories::NewFactory.new(pet_cls)
 
         self_link "/pets/{name}" do
           write do |pet|
@@ -30,12 +32,12 @@ describe JM::DSL::HALMapper do
   end
 
   context "when mapping a resource with 'self' link" do
-    let(:mapper_class) do
+    let(:pipe_class) do
       person = person_class
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
           self_link "/people/{name}" do
             read do |params|
@@ -60,7 +62,7 @@ describe JM::DSL::HALMapper do
       it "should generate a self link" do
         person = person_class.new("Marten", "Lienen", 21)
 
-        hash = mapper_class.new.write(person)
+        hash = pipe_class.new.pump(person, {})
 
         resource = {
           "_links" => {
@@ -74,7 +76,7 @@ describe JM::DSL::HALMapper do
     end
 
     context "from a hash" do
-      it "should instantiate the object from the URI" do
+      it "should not read the self link URI" do
         hash = {
           "_links" => {
             "self" => { "href" => "/people/marten-lienen" }
@@ -82,30 +84,18 @@ describe JM::DSL::HALMapper do
           "age" => 21
         }
 
-        person = mapper_class.new.read(hash)
+        result = pipe_class.new.suck(person_class.new, hash)
 
-        expect(person).to succeed_with(person_class.new("Marten", "Lienen", 21))
-      end
-    end
-
-    context "from a hash without a 'self' link" do
-      it "should instantiate an empty object" do
-        hash = { "age" => 21 }
-
-        person = mapper_class.new.read(hash)
-
-        expect(person).to succeed_with(person_class.new(nil, nil, 21))
+        expect(result).to succeed_with(person_class.new(nil, nil, 21))
       end
     end
   end
 
   context "when mapping a resource without a 'self' link" do
-    let(:mapper_class) do
-      person = person_class
-
-      Class.new(JM::DSL::HALMapper) do
+    let(:pipe_class) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
           property :age
         end
@@ -116,19 +106,9 @@ describe JM::DSL::HALMapper do
       it "should make no difference" do
         person = person_class.new("Marten", "Lienen", 21)
 
-        hash = mapper_class.new.write(person)
+        result = pipe_class.new.pump(person, {})
 
-        expect(hash).to succeed_with("age" => 21)
-      end
-    end
-
-    context "from a hash" do
-      it "should still instantiate the correct class" do
-        hash = { "age" => 21 }
-
-        person = mapper_class.new.read(hash)
-
-        expect(person).to succeed_with(person_class.new(nil, nil, 21))
+        expect(result).to succeed_with("age" => 21)
       end
     end
   end
@@ -138,13 +118,12 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pet)
     end
 
-    let(:person_mapper) do
-      pet_m = pet_mapper
-      person = person_class
+    let(:person_pipe) do
+      pet_m = pet_pipe
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
           link :pet, pet_m.new
 
@@ -154,10 +133,10 @@ describe JM::DSL::HALMapper do
     end
 
     context "and mapping to a hash" do
-      it "should use the mapper's 'self' link pipe" do
+      it "should use the pipe's 'self' link pipe" do
         person = person_class.new("Frodo", pet_class.new("Finchen"))
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with("_links" => {
                                        "pet" => { "href" => "/pets/Finchen" }
@@ -171,12 +150,12 @@ describe JM::DSL::HALMapper do
         hash = { "_links" => { "pet" => { "href" => "/pets/Finchen" } },
                  "name" => "Frodo" }
 
-        person = person_mapper.new.read(hash)
+        result = person_pipe.new.suck(person_class.new, hash)
 
         expected = person_class.new("Frodo",
                                     pet_class.new("Finchen"))
 
-        expect(person).to succeed_with(expected)
+        expect(result).to succeed_with(expected)
       end
     end
   end
@@ -186,13 +165,13 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pet)
     end
 
-    let(:person_mapper) do
-      pet_m = pet_mapper
+    let(:person_pipe) do
+      pet_m = pet_pipe
       person_cls = person_class
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person_cls)
+          super()
 
           self_link "/people/{name}" do
             read do |params|
@@ -215,7 +194,7 @@ describe JM::DSL::HALMapper do
       it "should create both links" do
         person = person_class.new("Marten", pet_class.new("Ronja"))
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with("_links" => {
                                        "self" => { "href" => "/people/Marten" },
@@ -229,9 +208,9 @@ describe JM::DSL::HALMapper do
         hash = { "_links" => { "self" => { "href" => "/people/Marten" },
                                "pet" => { "href" => "/pets/Ronja" } } }
 
-        person = person_mapper.new.read(hash)
+        person = person_pipe.new.suck(person_class.new, hash)
 
-        expect(person).to succeed_with(person_class.new("Marten",
+        expect(person).to succeed_with(person_class.new(nil,
                                                         pet_class.new("Ronja")))
       end
     end
@@ -242,13 +221,12 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pets)
     end
 
-    let(:person_mapper) do
-      person = person_class
-      pet_m = pet_mapper
+    let(:person_pipe) do
+      pet_m = pet_pipe
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
           links :pet,
                 pet_m.new,
@@ -262,7 +240,7 @@ describe JM::DSL::HALMapper do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with("_links" => {
                                        "pet" => [{ "href" => "/pets/Finchen" },
@@ -275,7 +253,7 @@ describe JM::DSL::HALMapper do
         hash = { "_links" => { "pet" => [{ "href" => "/pets/Finchen" },
                                          { "href" => "/pets/Ronja" }] } }
 
-        person = person_mapper.new.read(hash)
+        person = person_pipe.new.suck(person_class.new, hash)
 
         expected = person_class.new(nil, [pet_class.new("Finchen"),
                                           pet_class.new("Ronja")])
@@ -289,15 +267,14 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pet)
     end
 
-    let(:person_mapper) do
-      pet_m = pet_mapper
-      person = person_class
+    let(:person_pipe) do
+      pet_m = pet_pipe
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
-          embedded :pet, mapper: pet_m.new, read_only: false
+          embedded :pet, mapper: pet_m.new.to_mapper, read_only: false
 
           property :name
         end
@@ -308,7 +285,7 @@ describe JM::DSL::HALMapper do
       it "should embed the pet" do
         person = person_class.new("Marten", pet_class.new("Finchen"))
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         resource = {
           "_embedded" => {
@@ -338,7 +315,7 @@ describe JM::DSL::HALMapper do
           "name" => "Marten"
         }
 
-        person = person_mapper.new.read(hash)
+        person = person_pipe.new.suck(person_class.new, hash)
 
         expected = person_class.new("Marten", pet_class.new("Finchen"))
         expect(person).to succeed_with(expected)
@@ -351,16 +328,17 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pet)
     end
 
-    let(:person_mapper) do
+    let(:person_pipe) do
       pet_cls = pet_class
-      person = person_class
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
           embedded :pet, read_only: false do
-            mapper(pet_cls) do
+            mapper do
+              self.left_factory = JM::Factories::NewFactory.new(pet_cls)
+
               property :name
             end
           end
@@ -371,10 +349,10 @@ describe JM::DSL::HALMapper do
     end
 
     context "to a hash" do
-      it "should use the inline mapper" do
+      it "should use the inline pipe" do
         person = person_class.new("Marten", pet_class.new("Finchen"))
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with("name" => "Marten",
                                      "_embedded" => {
@@ -386,7 +364,7 @@ describe JM::DSL::HALMapper do
     end
 
     context "from a hash" do
-      it "should use the inline mapper" do
+      it "should use the inline pipe" do
         hash = {
           "name" => "Marten",
           "_embedded" => {
@@ -396,7 +374,7 @@ describe JM::DSL::HALMapper do
           }
         }
 
-        person = person_mapper.new.read(hash)
+        person = person_pipe.new.suck(person_class.new, hash)
 
         expected = person_class.new("Marten", pet_class.new("Finchen"))
         expect(person).to succeed_with(expected)
@@ -409,15 +387,14 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pets)
     end
 
-    let(:person_mapper) do
-      pet_m = pet_mapper
-      person = person_class
+    let(:person_pipe) do
+      pet_m = pet_pipe
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
-          embeddeds :pets, mapper: pet_m.new, read_only: false
+          embeddeds :pets, mapper: pet_m.new.to_mapper, read_only: false
 
           property :name
         end
@@ -429,7 +406,7 @@ describe JM::DSL::HALMapper do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         resource = {
           "_embedded" => {
@@ -473,7 +450,7 @@ describe JM::DSL::HALMapper do
           "name" => "Marten"
         }
 
-        person = person_mapper.new.read(hash)
+        person = person_pipe.new.suck(person_class.new, hash)
 
         expected = person_class.new("Marten", [pet_class.new("Finchen"),
                                                pet_class.new("Ronja")])
@@ -487,16 +464,17 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :pets)
     end
 
-    let(:person_mapper) do
+    let(:person_pipe) do
       pet_cls = pet_class
-      person = person_class
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
           embeddeds :pets, read_only: false do
-            mapper(pet_cls) do
+            mapper do
+              self.left_factory = JM::Factories::NewFactory.new(pet_cls)
+
               property :name
             end
           end
@@ -507,11 +485,11 @@ describe JM::DSL::HALMapper do
     end
 
     context "to a hash" do
-      it "should use the inline mapper" do
+      it "should use the inline pipe" do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         resource = {
           "_embedded" => {
@@ -532,7 +510,7 @@ describe JM::DSL::HALMapper do
     end
 
     context "from a hash" do
-      it "should use the inline mapper" do
+      it "should use the inline pipe" do
         hash = {
           "_embedded" => {
             "pets" => [
@@ -547,7 +525,7 @@ describe JM::DSL::HALMapper do
           "name" => "Marten"
         }
 
-        person = person_mapper.new.read(hash)
+        person = person_pipe.new.suck(person_class.new, hash)
 
         expected = person_class.new("Marten", [pet_class.new("Finchen"),
                                                pet_class.new("Ronja")])
@@ -561,16 +539,15 @@ describe JM::DSL::HALMapper do
       Struct.new(:name, :favorite, :pets)
     end
 
-    let(:person_mapper) do
-      pet_m = pet_mapper
-      person = person_class
+    let(:person_pipe) do
+      pet_m = pet_pipe
 
-      Class.new(JM::DSL::HALMapper) do
+      Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super(person)
+          super()
 
-          embedded :favorite, mapper: pet_m.new
-          embeddeds :pets, mapper: pet_m.new
+          embedded :favorite, mapper: pet_m.new.to_mapper
+          embeddeds :pets, mapper: pet_m.new.to_mapper
         end
       end
     end
@@ -598,7 +575,7 @@ describe JM::DSL::HALMapper do
         "name" => "Marten"
       }
 
-      person = person_mapper.new.read(hash)
+      person = person_pipe.new.suck(person_class.new, hash)
 
       expect(person).to succeed_with(person_class.new(nil, nil, nil))
     end

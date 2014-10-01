@@ -1,11 +1,9 @@
-describe JM::DSL::Mapper do
-  context "when mapping simple properties" do
-    let(:mapper) do
-      person_class = person
-
-      Class.new(JM::DSL::Mapper) do
+describe JM::DSL::Pipe do
+  context "when piping simple properties" do
+    let(:pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+          super()
 
           property :first_name
           property :last_name
@@ -18,37 +16,36 @@ describe JM::DSL::Mapper do
     end
 
     context "to a hash" do
-      it "should map properties to keys" do
+      it "should pipe properties to keys" do
         p = person.new("Marten", "Lienen")
 
-        hash = mapper.new.write(p)
+        hash = pipe.new.pump(p, {})
 
         expect(hash).to succeed_with(first_name: "Marten", last_name: "Lienen")
       end
     end
 
     context "from a hash" do
-      it "should map keys to properties" do
+      it "should pipe keys to properties" do
         hash = { first_name: "Marten", last_name: "Lienen" }
 
-        p = mapper.new.read(hash)
+        p = person.new
+        result = pipe.new.suck(p, hash)
 
-        expect(p).to succeed_with(person.new("Marten", "Lienen"))
+        expect(result).to succeed_with(person.new("Marten", "Lienen"))
       end
     end
   end
 
-  context "when mapping a read-only property" do
+  context "when piping a read-only property" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
 
-    let(:person_mapper) do
-      person = person_class
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person, Hash))
+          super()
 
           property :name
 
@@ -60,7 +57,7 @@ describe JM::DSL::Mapper do
     it "should write the property" do
       person = person_class.new("Frodo", 50)
 
-      hash = person_mapper.new.write(person)
+      hash = person_pipe.new.pump(person, {})
 
       expect(hash).to succeed_with(name: "Frodo", age: 50)
     end
@@ -68,23 +65,22 @@ describe JM::DSL::Mapper do
     it "should not read the property" do
       hash = { name: "Frodo", age: 50 }
 
-      person = person_mapper.new.read(hash)
+      person = person_class.new
+      result = person_pipe.new.suck(person, hash)
 
-      expect(person).to succeed_with(person_class.new("Frodo", nil))
+      expect(result).to succeed_with(person_class.new("Frodo", nil))
     end
   end
 
-  context "when mapping an optional property" do
+  context "when piping an optional property" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
 
-    let(:person_mapper) do
-      person = person_class
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person, Hash))
+          super()
 
           property :name
 
@@ -102,31 +98,29 @@ describe JM::DSL::Mapper do
     it "should not validate the property, if it is absent" do
       hash = { name: "Frodo" }
 
-      person = person_mapper.new.read(hash)
+      result = person_pipe.new.suck(person_class.new, hash)
 
-      expect(person).to succeed_with(person_class.new("Frodo", nil))
+      expect(result).to succeed_with(person_class.new("Frodo", nil))
     end
 
     it "should validate the property, if it has a value" do
       hash = { name: "Frodo", age: -1 }
 
-      person = person_mapper.new.read(hash)
+      result = person_pipe.new.suck(person_class.new, hash)
 
-      expect(person).to fail_with(JM::Error.new([:age], :too_young))
+      expect(result).to fail_with(JM::Error.new([:age], :too_young))
     end
   end
 
-  context "when mapping a property conditionally" do
+  context "when piping a property conditionally" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
 
-    let(:person_mapper) do
-      person = person_class
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person, Hash))
+          super()
 
           property :name
 
@@ -141,7 +135,7 @@ describe JM::DSL::Mapper do
       it "should write the property, if the condition holds" do
         person = person_class.new("Marten", 21)
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with(name: "Marten", age: 21)
       end
@@ -149,7 +143,7 @@ describe JM::DSL::Mapper do
       it "should not write the property, if the condition fails" do
         person = person_class.new("Alex", 7)
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with(name: "Alex")
       end
@@ -159,17 +153,17 @@ describe JM::DSL::Mapper do
       it "should read the property, if the condition holds" do
         hash = { name: "Alex", age: 14 }
 
-        person = person_mapper.new.read(hash)
+        result = person_pipe.new.suck(person_class.new, hash)
 
-        expect(person).to succeed_with(person_class.new("Alex", 14))
+        expect(result).to succeed_with(person_class.new("Alex", 14))
       end
 
       it "should not read the property, if the condition fails" do
         hash = { name: "Marten", age: 21 }
 
-        person = person_mapper.new.read(hash)
+        result = person_pipe.new.suck(person_class.new, hash)
 
-        expect(person).to succeed_with(person_class.new("Marten", nil))
+        expect(result).to succeed_with(person_class.new("Marten", nil))
       end
     end
   end
@@ -179,12 +173,10 @@ describe JM::DSL::Mapper do
       Struct.new(:name, :age)
     end
 
-    let(:person_mapper) do
-      person = person_class
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person, Hash))
+          super()
 
           read_only_property :name do |p|
             "#{p.name}, #{p.age}"
@@ -196,7 +188,7 @@ describe JM::DSL::Mapper do
     it "should write normally" do
       person = person_class.new("Marten", 21)
 
-      hash = person_mapper.new.write(person)
+      hash = person_pipe.new.pump(person, {})
 
       expect(hash).to succeed_with(name: "Marten, 21")
     end
@@ -204,23 +196,21 @@ describe JM::DSL::Mapper do
     it "should be read-only" do
       hash = { name: "Marten, 21" }
 
-      person = person_mapper.new.read(hash)
+      result = person_pipe.new.suck(person_class.new, hash)
 
-      expect(person).to succeed_with(person_class.new(nil, nil))
+      expect(result).to succeed_with(person_class.new(nil, nil))
     end
   end
 
-  context "when mapping a complex property with an inline accessor" do
+  context "when piping a complex property with an inline accessor" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
 
-    let(:person_mapper) do
-      person_cls = person_class
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person_cls, Hash))
+          super()
 
           property :name do
             get do |person|
@@ -244,7 +234,7 @@ describe JM::DSL::Mapper do
       it "should use the inline accessor" do
         person = person_class.new("James", 49)
 
-        hash = person_mapper.new.write(person)
+        hash = person_pipe.new.pump(person, {})
 
         expect(hash).to succeed_with(name: "James (49)")
       end
@@ -254,35 +244,37 @@ describe JM::DSL::Mapper do
       it "should use the inline accessor" do
         hash = { name: "James (49)" }
 
-        person = person_mapper.new.read(hash)
+        result = person_pipe.new.suck(person_class.new, hash)
 
-        expect(person).to succeed_with(person_class.new("James", 49))
+        expect(result).to succeed_with(person_class.new("James", 49))
       end
     end
   end
 
-  context "when mapping arrays" do
-    let(:person_mapper) do
+  context "when piping arrays" do
+    let(:person_pipe) do
       person_class = person
 
-      Class.new(JM::DSL::Mapper) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+          super()
+
+          self.left_factory = JM::Factories::NewFactory.new(person_class)
+          self.right_factory = JM::Factories::NewFactory.new(Hash)
 
           property :name
         end
       end
     end
 
-    let(:mapper) do
-      community_class = community
-      m = person_mapper.new
+    let(:pipe) do
+      m = person_pipe.new
 
-      Class.new(JM::DSL::Mapper) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(community_class, Hash))
+          super()
 
-          array :people, mapper: m
+          array :people, mapper: m.to_mapper
         end
       end
     end
@@ -299,7 +291,7 @@ describe JM::DSL::Mapper do
       it "should correctly serialize them" do
         comm = community.new([person.new("Marten"), person.new("Lienen")])
 
-        hash = mapper.new.write(comm)
+        hash = pipe.new.pump(comm, {})
 
         expect(hash).to succeed_with(people: [{ name: "Marten" },
                                               { name: "Lienen" }])
@@ -310,7 +302,7 @@ describe JM::DSL::Mapper do
       it "should correctly deserialize them" do
         hash = { people: [{ name: "Marten" }, { name: "Lienen" }] }
 
-        comm = mapper.new.read(hash)
+        comm = pipe.new.suck(community.new, hash)
 
         expect(comm).to succeed_with(community.new([person.new("Marten"),
                                                     person.new("Lienen")]))
@@ -318,13 +310,13 @@ describe JM::DSL::Mapper do
     end
 
     it "should be possible to define a custom accessor with a block" do
-      person_m = person_mapper.new
-      person_class = person
-      m = Class.new(JM::DSL::Mapper) do
-        define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+      person_m = person_pipe.new
 
-          array :persons, mapper: person_m do
+      m = Class.new(JM::DSL::Pipe) do
+        define_method(:initialize) do
+          super()
+
+          array :persons, mapper: person_m.to_mapper do
             get do |community|
               community.people
             end
@@ -332,26 +324,24 @@ describe JM::DSL::Mapper do
         end
       end
 
-      community_mapper = m.new
+      community_pipe = m.new
       c = community.new([person.new("A")])
 
-      hash = community_mapper.write(c)
+      hash = community_pipe.pump(c, {})
 
       expect(hash).to succeed_with(persons: [{ name: "A" }])
     end
   end
 
-  context "when mapping a validated property" do
+  context "when piping a validated property" do
     let(:person) do
       Struct.new(:name)
     end
 
-    let(:person_mapper) do
-      person_class = person
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+          super()
 
           property :name do
             validator do
@@ -370,13 +360,13 @@ describe JM::DSL::Mapper do
 
     context "from a hash" do
       it "should fail if the validation fails" do
-        result = person_mapper.new.read(name: "Sven")
+        result = person_pipe.new.suck(person.new, name: "Sven")
 
         expect(result).to fail_with(JM::Error.new([:name], :name_to_short))
       end
 
       it "should succeed if the validation succeeds" do
-        result = person_mapper.new.read(name: "Marten")
+        result = person_pipe.new.suck(person.new, name: "Marten")
 
         expect(result).to succeed_with(person.new("Marten"))
       end
@@ -384,30 +374,28 @@ describe JM::DSL::Mapper do
 
     context "to a hash" do
       it "should fail if the validation fails" do
-        result = person_mapper.new.write(person.new("Sven"))
+        result = person_pipe.new.pump(person.new("Sven"), {})
 
         expect(result).to fail_with(JM::Error.new([:name], :name_to_short))
       end
 
       it "should succeed if the validation succeeds" do
-        result = person_mapper.new.write(person.new("Marten"))
+        result = person_pipe.new.pump(person.new("Marten"), {})
 
         expect(result).to succeed_with(name: "Marten")
       end
     end
   end
 
-  context "when mapping multiple validated properties" do
+  context "when piping multiple validated properties" do
     let(:person) do
       Struct.new(:name, :age)
     end
 
-    let(:person_mapper) do
-      person_class = person
-
-      Class.new(JM::DSL::Mapper) do
+    let(:person_pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(person_class, Hash))
+          super()
 
           property :name do
             validator do
@@ -430,7 +418,7 @@ describe JM::DSL::Mapper do
 
     context "from a hash" do
       it "should merge all failures" do
-        result = person_mapper.new.read(name: "M", age: -1)
+        result = person_pipe.new.suck(person.new, name: "M", age: -1)
 
         expect(result).to fail_with([JM::Error.new([:name], :too_short),
                                      JM::Error.new([:age], :not_born_yet)])
@@ -439,7 +427,7 @@ describe JM::DSL::Mapper do
 
     context "to a hash" do
       it "should merge all failures" do
-        result = person_mapper.new.write(person.new("M", -1))
+        result = person_pipe.new.pump(person.new("M", -1), {})
 
         expect(result).to fail_with([JM::Error.new([:name], :too_short),
                                      JM::Error.new([:age], :not_born_yet)])
@@ -447,13 +435,13 @@ describe JM::DSL::Mapper do
     end
   end
 
-  context "when mapping an array property with validated elements" do
+  context "when piping an array property with validated elements" do
     let(:container) do
       Struct.new(:numbers)
     end
 
-    let(:number_mapper) do
-      Class.new(JM::Mapper) do
+    let(:number_pipe) do
+      Class.new(JM::Pipe) do
         def read(number)
           if (5..9).include?(number)
             JM::Failure.new(JM::Error.new([], :unwanted_number))
@@ -466,13 +454,12 @@ describe JM::DSL::Mapper do
       end
     end
 
-    let(:mapper) do
-      number_m = number_mapper
-      container_class = container
+    let(:pipe) do
+      number_m = number_pipe
 
-      Class.new(JM::DSL::Mapper) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+          super()
 
           array :numbers, mapper: number_m.new
         end
@@ -481,7 +468,7 @@ describe JM::DSL::Mapper do
 
     context "from a hash" do
       it "should prepend the errors with the indices" do
-        result = mapper.new.read(numbers: [2, 7, 3, 9])
+        result = pipe.new.suck(container.new, numbers: [2, 7, 3, 9])
 
         errors = [JM::Error.new([:numbers, 1], :unwanted_number),
                   JM::Error.new([:numbers, 3], :unwanted_number)]
@@ -490,17 +477,15 @@ describe JM::DSL::Mapper do
     end
   end
 
-  context "when mapping an array property with inline validated elements" do
+  context "when piping an array property with inline validated elements" do
     let(:container) do
       Struct.new(:numbers)
     end
 
-    let(:mapper) do
-      container_class = container
-
-      Class.new(JM::DSL::Mapper) do
+    let(:pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+          super()
 
           array :numbers do
             element_validator do
@@ -519,7 +504,7 @@ describe JM::DSL::Mapper do
 
     context "from a hash" do
       it "should prepend the errors with the indices" do
-        result = mapper.new.read(numbers: [2, 7, 3, 9])
+        result = pipe.new.suck(container.new, numbers: [2, 7, 3, 9])
 
         expect(result).to fail_with([JM::Error.new([:numbers, 0], :too_small),
                                      JM::Error.new([:numbers, 2], :too_small)])
@@ -527,17 +512,15 @@ describe JM::DSL::Mapper do
     end
   end
 
-  context "when mapping an array property with an inline validator" do
+  context "when piping an array property with an inline validator" do
     let(:container) do
       Struct.new(:numbers)
     end
 
-    let(:mapper) do
-      container_class = container
-
-      Class.new(JM::DSL::Mapper) do
+    let(:pipe) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+          super()
 
           array :numbers, mapper: JM::Mappers::IdentityMapper.new do
             validator do
@@ -556,14 +539,14 @@ describe JM::DSL::Mapper do
 
     context "from a hash" do
       it "should fail if the validation fails" do
-        result = mapper.new.read(numbers: [1, 5])
+        result = pipe.new.suck(container.new, numbers: [1, 5])
 
         expect(result).to fail_with(JM::Error.new([:numbers], :too_few))
       end
     end
   end
 
-  context "when mapping an array property with an array validator" do
+  context "when piping an array property with an array validator" do
     let(:container) do
       Struct.new(:numbers)
     end
@@ -580,13 +563,12 @@ describe JM::DSL::Mapper do
       end
     end
 
-    let(:mapper) do
-      container_class = container
+    let(:pipe) do
       validator_class = validator
 
-      Class.new(JM::DSL::Mapper) do
+      Class.new(JM::DSL::Pipe) do
         define_method(:initialize) do
-          super(JM::Mappers::InstanceMapper.new(container_class, Hash))
+          super()
 
           array :numbers,
                 mapper: JM::Mappers::IdentityMapper.new,
@@ -597,7 +579,7 @@ describe JM::DSL::Mapper do
 
     context "from a hash" do
       it "should fail if the validation fails" do
-        result = mapper.new.read(numbers: [1, 5])
+        result = pipe.new.suck(container.new, numbers: [1, 5])
 
         expect(result).to fail_with(JM::Error.new([:numbers], :too_many))
       end

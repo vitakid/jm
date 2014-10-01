@@ -1,22 +1,22 @@
 module JM
   module Pipes
-    # Only forward {#pipe} calls to the wrapped pipe, if a condition holds
+    # Only forward {#pump} calls to the wrapped pipe, if a condition holds
     class ConditionalWritePipe < Pipe
       def initialize(pipe, condition)
         @pipe = pipe
         @condition = condition
       end
 
-      def pipe(source, target)
+      def pump(source, target)
         if @condition.call(source)
-          @pipe.pipe(source, target)
+          @pipe.pump(source, target)
         else
           Success.new(target)
         end
       end
 
-      def slurp(source, target)
-        @pipe.slurp(source, target)
+      def suck(source, target)
+        @pipe.suck(source, target)
       end
     end
   end

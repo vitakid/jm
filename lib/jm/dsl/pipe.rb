@@ -21,15 +21,9 @@ module JM
     # lots of ruby trickery. A simple example would be a parent class for all
     # mappers for HAL collection resources. In the derived classes you can
     # easily pass things like URI templates and page numbers via `#super`.
-    class Mapper < JM::Mapper
-      # Initialize a Mapper
-      #
-      # @param [JM::Mapper] factory A mapper, that instantiates a new target
-      #   object on {JM::Mapper#write} and a new source object on
-      #   {JM::Mapper#read}.
-      def initialize(factory)
+    class Pipe < JM::Pipe
+      def initialize
         @pipes = []
-        @factory = factory
       end
 
       # Register a pipe
@@ -168,58 +162,40 @@ module JM
         pipe(builder.to_pipe, **args)
       end
 
-      # Write by piping the source through all registered pipes
-      def write(object)
-        target_res = instantiate_target(object)
+      # Pump the `source` through all registered pipes into `target`
+      def pump(source, target)
+        obj, failure = @pipes.reduce([target, Failure.new]) do |(t, f), pipe|
+          res = pipe.pump(source, t)
 
-        target_res.map do |target|
-          obj, failure = @pipes.reduce([target, Failure.new]) do |(t, f), pipe|
-            res = pipe.pipe(object, t)
-
-            case res
-            when Success then [res.value, f]
-            when Failure then [t, f + res]
-            end
+          case res
+          when Success then [res.value, f]
+          when Failure then [t, f + res]
           end
+        end
 
-          if failure.errors.length > 0
-            failure
-          else
-            Success.new(obj)
-          end
+        if failure.errors.length > 0
+          failure
+        else
+          Success.new(obj)
         end
       end
 
-      # Read by slurping the target through all registered pipes
-      def read(target)
-        source_res = instantiate_source(target)
+      # Slurp the `target` through all registered pipes into `source`
+      def suck(source, target)
+        obj, failure = @pipes.reduce([source, Failure.new]) do |(s, f), pipe|
+          res = pipe.suck(s, target)
 
-        source_res.map do |source|
-          obj, failure = @pipes.reduce([source, Failure.new]) do |(s, f), pipe|
-            res = pipe.slurp(s, target)
-
-            case res
-            when Success then [res.value, f]
-            when Failure then [s, f + res]
-            end
-          end
-
-          if failure.errors.length > 0
-            failure
-          else
-            Success.new(obj)
+          case res
+          when Success then [res.value, f]
+          when Failure then [s, f + res]
           end
         end
-      end
 
-      # @api private
-      def instantiate_source(target)
-        @factory.read(target)
-      end
-
-      # @api private
-      def instantiate_target(source)
-        @factory.write(source)
+        if failure.errors.length > 0
+          failure
+        else
+          Success.new(obj)
+        end
       end
     end
   end
