@@ -9,6 +9,8 @@ module JM
       end
 
       def get(hash)
+        hash["_links"] ||= {}
+
         LINK_ACCESSOR.get(hash).map do |links|
           @rel_accessor.get(links)
         end
