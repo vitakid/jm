@@ -580,4 +580,40 @@ describe JM::DSL::HALPipe do
       expect(person).to succeed_with(person_class.new(nil, nil, nil))
     end
   end
+
+  context "when a required link is missing" do
+    let(:pet_pipe) do
+      pet_c = pet_class
+
+      Class.new(JM::DSL::HALPipe) do
+        def initialize
+          super
+
+          self_link "/pets/{name}" do
+            read do |params|
+              pet_c.new(params["name"])
+            end
+          end
+        end
+      end
+    end
+
+    let(:person_pipe) do
+      pet_p = pet_pipe.new
+
+      Class.new(JM::DSL::HALPipe) do
+        define_method(:initialize) do
+          super()
+
+          link :pet, pet_p
+        end
+      end
+    end
+
+    it "should fail with the full path in the error" do
+      result = person_pipe.new.suck(person_class.new, {})
+
+      expect(result).to fail_with(JM::Error.new(["_links", "pet"], :missing_key, key: "pet"))
+    end
+  end
 end

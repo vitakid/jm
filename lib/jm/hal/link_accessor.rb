@@ -12,7 +12,12 @@ module JM
         hash["_links"] ||= {}
 
         LINK_ACCESSOR.get(hash).map do |links|
-          @rel_accessor.get(links)
+          result = @rel_accessor.get(links)
+
+          case result
+          when Success then result
+          when Failure then result.sink(["_links"])
+          end
         end
       end
 
