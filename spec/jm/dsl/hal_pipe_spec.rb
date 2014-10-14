@@ -591,7 +591,7 @@ describe JM::DSL::HALPipe do
 
       Class.new(JM::DSL::HALPipe) do
         define_method(:initialize) do
-          super
+          super()
 
           self_link "/pets/{name}" do
             read do |params|

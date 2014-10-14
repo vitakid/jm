@@ -4,8 +4,8 @@ module JM
     class LinkAccessor < Accessor
       LINKS_ACCESSOR = Accessors::HashKeyAccessor.new("_links", {})
 
-      def initialize(rel)
-        @rel_accessor = Accessors::HashKeyAccessor.new(rel.to_s)
+      def initialize(rel, default_value = nil)
+        @rel_accessor = Accessors::HashKeyAccessor.new(rel.to_s, default_value)
       end
 
       def get(hash)

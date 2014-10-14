@@ -2,10 +2,11 @@ module JM
   module DSL
     # Builder for link pipes
     class LinkBuilder < Builder
-      def initialize(rel, accessor, mapper)
+      def initialize(rel, accessor, mapper, default_value = nil)
         @rel = rel
         @accessor = accessor
         @mapper = mapper
+        @default_value = default_value
       end
 
       # Define how to read the URI parameters from the object
@@ -33,7 +34,7 @@ module JM
         config = {
           source_accessor: accessor,
           mapper: @mapper,
-          target_accessor: HAL::LinkAccessor.new(@rel)
+          target_accessor: HAL::LinkAccessor.new(@rel, @default_value)
         }
 
         Pipes::CompositePipe.new(config)

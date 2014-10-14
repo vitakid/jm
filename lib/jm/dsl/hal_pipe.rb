@@ -146,7 +146,8 @@ module JM
         builder = LinkBuilder.new(rel,
                                   accessor,
                                   Mappers::ArrayMapper.new(
-                                    mapper.link_mapper))
+                                    mapper.link_mapper),
+                                  [])
         builder.configure(&block)
 
         pipe(builder.to_pipe, **args)
