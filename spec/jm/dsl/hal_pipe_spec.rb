@@ -581,7 +581,11 @@ describe JM::DSL::HALPipe do
     end
   end
 
-  context "when a required link is missing" do
+  context "when a link is missing" do
+    let(:person_class) do
+      Struct.new(:name, :pet)
+    end
+
     let(:pet_pipe) do
       pet_c = pet_class
 
@@ -610,10 +614,10 @@ describe JM::DSL::HALPipe do
       end
     end
 
-    it "should fail with the full path in the error" do
+    it "should not write anything" do
       result = person_pipe.new.suck(person_class.new, {})
 
-      expect(result).to fail_with(JM::Error.new(["_links", "pet"], :missing_key, key: "pet"))
+      expect(result).to succeed_with(person_class.new)
     end
   end
 end

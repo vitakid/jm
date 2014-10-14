@@ -72,46 +72,6 @@ describe JM::DSL::Pipe do
     end
   end
 
-  context "when piping an optional property" do
-    let(:person_class) do
-      Struct.new(:name, :age)
-    end
-
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
-        define_method(:initialize) do
-          super()
-
-          property :name
-
-          property :age, optional: true do
-            validator do
-              predicate(JM::Error.new([], :too_young)) do |age|
-                age >= 0
-              end
-            end
-          end
-        end
-      end
-    end
-
-    it "should not validate the property, if it is absent" do
-      hash = { name: "Frodo" }
-
-      result = person_pipe.new.suck(person_class.new, hash)
-
-      expect(result).to succeed_with(person_class.new("Frodo", nil))
-    end
-
-    it "should validate the property, if it has a value" do
-      hash = { name: "Frodo", age: -1 }
-
-      result = person_pipe.new.suck(person_class.new, hash)
-
-      expect(result).to fail_with(JM::Error.new([:age], :too_young))
-    end
-  end
-
   context "when piping a property conditionally" do
     let(:person_class) do
       Struct.new(:name, :age)

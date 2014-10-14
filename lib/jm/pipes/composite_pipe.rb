@@ -6,12 +6,10 @@ module JM
     class CompositePipe < Pipe
       def initialize(source_accessor: Accessors::NilAccessor.new,
                      mapper: Mappers::IdentityMapper.new,
-                     target_accessor: Accessors::NilAccessor.new,
-                     optional: false)
+                     target_accessor: Accessors::NilAccessor.new)
         @source_accessor = source_accessor
         @mapper = mapper
         @target_accessor = target_accessor
-        @optional = optional
       end
 
       def pump(source, target)
@@ -23,20 +21,9 @@ module JM
       end
 
       def suck(source, target)
-        read_result = @target_accessor.get(target)
-
-        case read_result
-        when Success
-          read_result.map do |read|
-            @mapper.read(read).map do |mapped|
-              @source_accessor.set(source, mapped)
-            end
-          end
-        when Failure
-          if @optional
-            JM::Success.new(source)
-          else
-            read_result
+        @target_accessor.get(target).map do |read|
+          @mapper.read(read).map do |mapped|
+            @source_accessor.set(source, mapped)
           end
         end
       end

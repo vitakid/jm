@@ -135,7 +135,7 @@ def age(person)
   if person.key?("age")
     JM::Success.new(person["age"])
   else
-    JM::Failure.new(JM::Error.new(["age"], :missing_key, { hash: person }))
+    JM::Failure.new(JM::Error.new(["age"], :required))
   end
 end
 ```

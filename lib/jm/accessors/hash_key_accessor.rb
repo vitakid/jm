@@ -2,17 +2,16 @@ module JM
   module Accessors
     # Accesses a hash with a given key
     class HashKeyAccessor < JM::Mapper
-      def initialize(key)
+      def initialize(key, default_value = nil)
         @key = key
+        @default_value = default_value
       end
 
       def get(hash)
         if !hash.is_a?(Hash)
           Failure.new(Errors::NotAnObjectError.new([]))
-        elsif !hash.key?(@key)
-          Failure.new(Errors::MissingKeyError.new([@key], @key))
         else
-          Success.new(hash[@key])
+          Success.new(hash.fetch(@key, @default_value))
         end
       end
 

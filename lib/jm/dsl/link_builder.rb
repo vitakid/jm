@@ -28,6 +28,8 @@ module JM
           raise Exception.new("You have to pass an accessor")
         end
 
+        @mapper = Mappers::WhenValue.new(@mapper)
+
         config = {
           source_accessor: accessor,
           mapper: @mapper,

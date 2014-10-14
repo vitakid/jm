@@ -2,7 +2,7 @@ module JM
   module HAL
     # Access HAL links by rel in HAL hashes
     class LinkAccessor < Accessor
-      LINK_ACCESSOR = Accessors::HashKeyAccessor.new("_links")
+      LINKS_ACCESSOR = Accessors::HashKeyAccessor.new("_links", {})
 
       def initialize(rel)
         @rel_accessor = Accessors::HashKeyAccessor.new(rel.to_s)
@@ -11,7 +11,7 @@ module JM
       def get(hash)
         hash["_links"] ||= {}
 
-        LINK_ACCESSOR.get(hash).map do |links|
+        LINKS_ACCESSOR.get(hash).map do |links|
           result = @rel_accessor.get(links)
 
           case result

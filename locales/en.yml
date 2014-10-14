@@ -4,7 +4,6 @@ en:
     errors:
       date_iso8601_incompatible: '"%{input}" is no ISO8601 compatible date'
       invalid_link: The link is invalid
-      missing_key: The key "%{key}" is missing
       missing_getter: There is no getter "%{getter}"
       missing_setter: There is no setter "%{setter}"
       not_an_object: This should be an object
