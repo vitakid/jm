@@ -590,7 +590,7 @@ describe JM::DSL::HALPipe do
       pet_c = pet_class
 
       Class.new(JM::DSL::HALPipe) do
-        def initialize
+        define_method(:initialize) do
           super
 
           self_link "/pets/{name}" do

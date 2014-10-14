@@ -277,9 +277,7 @@ describe JM::DSL::Pipe do
           super()
 
           array :persons, mapper: person_m.to_mapper do
-            get do |community|
-              community.people
-            end
+            get(&:people)
           end
         end
       end

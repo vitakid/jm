@@ -104,7 +104,9 @@ module JM
                         TemplateParamsAccessor.new(uri_template),
                       **args,
                       &block)
-        builder = LinkBuilder.new(rel, params_accessor, HAL::LinkMapper.new(uri_template))
+        builder = LinkBuilder.new(rel,
+                                  params_accessor,
+                                  HAL::LinkMapper.new(uri_template))
         builder.configure(&block)
 
         pipe(builder.to_pipe, **args)
@@ -190,7 +192,9 @@ module JM
                     write_only: true,
                     **args,
                     &block)
-        builder = EmbeddedsBuilder.new(rel, accessor, Mappers::ArrayMapper.new(mapper))
+        builder = EmbeddedsBuilder.new(rel,
+                                       accessor,
+                                       Mappers::ArrayMapper.new(mapper))
         builder.configure(&block)
 
         pipe(builder.to_pipe, write_only: write_only, **args)
