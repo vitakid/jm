@@ -37,7 +37,7 @@ describe JM::DSL::Pipe do
     end
   end
 
-  context "when piping a read-only property" do
+  context "when piping a write-only property" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -49,7 +49,7 @@ describe JM::DSL::Pipe do
 
           property :name
 
-          property :age, read_only: true
+          property :age, write_only: true
         end
       end
     end
@@ -168,7 +168,7 @@ describe JM::DSL::Pipe do
     end
   end
 
-  context "when using the #read_only_property shorthand" do
+  context "when using the #write_only_property shorthand" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -178,7 +178,7 @@ describe JM::DSL::Pipe do
         define_method(:initialize) do
           super()
 
-          read_only_property :name do |p|
+          write_only_property :name do |p|
             "#{p.name}, #{p.age}"
           end
         end
@@ -193,7 +193,7 @@ describe JM::DSL::Pipe do
       expect(hash).to succeed_with(name: "Marten, 21")
     end
 
-    it "should be read-only" do
+    it "should be write-only" do
       hash = { name: "Marten, 21" }
 
       result = person_pipe.new.suck(person_class.new, hash)

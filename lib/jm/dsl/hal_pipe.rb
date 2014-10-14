@@ -152,7 +152,7 @@ module JM
 
       # Embed a resource
       #
-      # Embedded resources are read-only be default, so that you don't grant
+      # Embedded resources are write-only be default, so that you don't grant
       # access to objects accidentally.
       #
       # @param [Symbol] rel Link relation
@@ -164,18 +164,18 @@ module JM
       def embedded(rel,
                    mapper: nil,
                    accessor: Accessors::AccessorAccessor.new(rel),
-                   read_only: true,
+                   write_only: true,
                    **args,
                    &block)
         builder = EmbeddedBuilder.new(rel, accessor, mapper)
         builder.configure(&block)
 
-        pipe(builder.to_pipe, read_only: read_only, **args)
+        pipe(builder.to_pipe, write_only: write_only, **args)
       end
 
       # Embed an array of resources
       #
-      # Embedded resources are read-only be default, so that you don't grant
+      # Embedded resources are write-only be default, so that you don't grant
       # access to objects accidentally.
       #
       # @param [Symbol] rel Link relation
@@ -187,13 +187,13 @@ module JM
       def embeddeds(rel,
                     mapper: nil,
                     accessor: Accessors::AccessorAccessor.new(rel),
-                    read_only: true,
+                    write_only: true,
                     **args,
                     &block)
         builder = EmbeddedsBuilder.new(rel, accessor, Mappers::ArrayMapper.new(mapper))
         builder.configure(&block)
 
-        pipe(builder.to_pipe, read_only: read_only, **args)
+        pipe(builder.to_pipe, write_only: write_only, **args)
       end
 
       def pump(source, target)

@@ -274,7 +274,7 @@ describe JM::DSL::HALPipe do
         define_method(:initialize) do
           super()
 
-          embedded :pet, mapper: pet_m.new.to_mapper, read_only: false
+          embedded :pet, mapper: pet_m.new.to_mapper, write_only: false
 
           property :name
         end
@@ -335,7 +335,7 @@ describe JM::DSL::HALPipe do
         define_method(:initialize) do
           super()
 
-          embedded :pet, read_only: false do
+          embedded :pet, write_only: false do
             mapper do
               self.left_factory = JM::Factories::NewFactory.new(pet_cls)
 
@@ -394,7 +394,7 @@ describe JM::DSL::HALPipe do
         define_method(:initialize) do
           super()
 
-          embeddeds :pets, mapper: pet_m.new.to_mapper, read_only: false
+          embeddeds :pets, mapper: pet_m.new.to_mapper, write_only: false
 
           property :name
         end
@@ -471,7 +471,7 @@ describe JM::DSL::HALPipe do
         define_method(:initialize) do
           super()
 
-          embeddeds :pets, read_only: false do
+          embeddeds :pets, write_only: false do
             mapper do
               self.left_factory = JM::Factories::NewFactory.new(pet_cls)
 
@@ -552,7 +552,7 @@ describe JM::DSL::HALPipe do
       end
     end
 
-    it "should make them read-only by default" do
+    it "should make them write-only by default" do
       hash = {
         "_embedded" => {
           "favorite" => {

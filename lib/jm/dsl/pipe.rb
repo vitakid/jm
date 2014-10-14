@@ -34,18 +34,18 @@ module JM
       # just shorthands for {#pipe} calls.
       #
       # Other methods should pass their keyword arguments to {#pipe}, so that
-      # they can be configured to be read-only etc. All built-in methods follow
+      # they can be configured to be write-only etc. All built-in methods follow
       # that principle.
       #
       # @param [JM::Pipe] pipe
-      # @param [true, false] read_only Make the pipe read-only
+      # @param [true, false] write_only Make the pipe write-only
       # @param [Proc] read_if It is passed the value to read.
       #   Only read, if the lambda evaluates to true
       # @param [Proc] write_if It is passed the value to write.
       #   Only write, if the lambda evaluates to true
-      def pipe(pipe, read_only: false, write_if: nil, read_if: nil)
-        if read_only
-          pipe = Pipes::ReadOnlyPipe.new(pipe)
+      def pipe(pipe, write_only: false, write_if: nil, read_if: nil)
+        if write_only
+          pipe = Pipes::WriteOnlyPipe.new(pipe)
         end
 
         if write_if
@@ -99,16 +99,16 @@ module JM
         pipe(builder.to_pipe, **args)
       end
 
-      # A shorthand to register read-only properties
+      # A shorthand to register write-only properties
       #
       # @example
-      #   read_only_property :age do |source|
+      #   write_only_property :age do |source|
       #     Date.today - source.date_of_birth
       #   end
       # @param [Symbol] name Property to map
       # @param [Hash] args Passed on to {#property}
       # @param block Definition for {JM::Accessor#get}
-      def read_only_property(name, **args, &block)
+      def write_only_property(name, **args, &block)
         accessor_class = Class.new(Accessor) do
           define_method(:get) do |object|
             Success.new(block.call(object))
@@ -118,7 +118,7 @@ module JM
         accessor = accessor_class.new
 
         args[:accessor] = accessor
-        args[:read_only] = true
+        args[:write_only] = true
 
         property(name, **args)
       end

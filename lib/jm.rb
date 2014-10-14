@@ -41,7 +41,7 @@ require "jm/accessors/hash_key_accessor"
 
 require "jm/pipe"
 require "jm/pipes/composite_pipe"
-require "jm/pipes/read_only_pipe"
+require "jm/pipes/write_only_pipe"
 require "jm/pipes/conditional_read_pipe"
 require "jm/pipes/conditional_write_pipe"
 
