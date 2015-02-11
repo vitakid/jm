@@ -38,3 +38,7 @@ SignalException:
 # Allow unless as well as negated if
 NegatedIf:
   Enabled: false
+
+# Sometimes complexity is necessary
+AbcSize:
+  Enabled: false
