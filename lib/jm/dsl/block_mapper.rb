@@ -12,12 +12,12 @@ module JM
         @write = write
       end
 
-      def read(right)
-        Result.wrap(@read.call(right))
+      def read(object)
+        Result.wrap(@read.call(object))
       end
 
-      def write(left)
-        Result.wrap(@write.call(left))
+      def write(object)
+        Result.wrap(@write.call(object))
       end
     end
   end

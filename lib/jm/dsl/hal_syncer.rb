@@ -5,7 +5,7 @@ module JM
       def initialize
         super
 
-        self.right_factory = Factories::NewFactory.new(Hash)
+        self.target_factory = Factories::NewFactory.new(Hash)
       end
 
       # Map all properties to and from string names

@@ -9,8 +9,8 @@ module JM
       def initialize
         super
 
-        self.left_factory = Factories::NewFactory.new(Hash)
-        self.right_factory = Factories::NewFactory.new(Hash)
+        self.source_factory = Factories::NewFactory.new(Hash)
+        self.target_factory = Factories::NewFactory.new(Hash)
 
         array :errors, mapper: ErrorSyncer.new.to_mapper
       end

@@ -10,7 +10,7 @@ describe JM::DSL::HALSyncer do
       define_method(:initialize) do
         super()
 
-        self.left_factory = JM::Factories::NewFactory.new(pet_cls)
+        self.source_factory = JM::Factories::NewFactory.new(pet_cls)
 
         self_link "/pets/{name}" do
           write do |pet|
@@ -337,7 +337,7 @@ describe JM::DSL::HALSyncer do
 
           embedded :pet, write_only: false do
             mapper do
-              self.left_factory = JM::Factories::NewFactory.new(pet_cls)
+              self.source_factory = JM::Factories::NewFactory.new(pet_cls)
 
               property :name
             end
@@ -473,7 +473,7 @@ describe JM::DSL::HALSyncer do
 
           embeddeds :pets, write_only: false do
             mapper do
-              self.left_factory = JM::Factories::NewFactory.new(pet_cls)
+              self.source_factory = JM::Factories::NewFactory.new(pet_cls)
 
               property :name
             end

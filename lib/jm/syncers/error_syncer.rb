@@ -34,8 +34,8 @@ module JM
       def initialize
         super
 
-        self.left_factory = Factories::NewFactory.new(Error)
-        self.right_factory = Factories::NewFactory.new(Hash)
+        self.source_factory = Factories::NewFactory.new(Error)
+        self.target_factory = Factories::NewFactory.new(Hash)
 
         property :path
         property :name

@@ -1,19 +1,19 @@
 module JM
   module Mappers
-    # Uses the left and right accessor of a syncer for mapping
+    # Uses the source and target factories of a syncer for mapping
     class SyncerMapper < Mapper
       def initialize(syncer)
         @syncer = syncer
       end
 
       def read(object)
-        target = @syncer.left_factory.create
+        source = @syncer.source_factory.create
 
-        @syncer.pull(target, object)
+        @syncer.pull(source, object)
       end
 
       def write(object)
-        target = @syncer.right_factory.create
+        target = @syncer.target_factory.create
 
         @syncer.push(object, target)
       end

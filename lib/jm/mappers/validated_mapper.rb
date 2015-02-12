@@ -3,30 +3,30 @@ module JM
     # Wrap a mapper with {Validators}
     #
     # On both {#read} and {#write} the mapper will first validate, that the
-    # input is valid on the origin side, then feed it into the wrapped mapper
+    # input is valid on the source side, then feed it into the wrapped mapper
     # and then validate, that the output is valid on the target side.
     class ValidatedMapper < Mapper
       # @param [Mapper] mapper Mapper to wrap
-      # @param [Validator] left Validator for the left side
-      # @param [Validator] right Validator for the right side
-      def initialize(mapper, left, right)
+      # @param [Validator] source_validator Validator for the source side
+      # @param [Validator] target_validator Validator for the target side
+      def initialize(mapper, source_validator, target_validator)
         @mapper = mapper
-        @left_validator = left
-        @right_validator = right
+        @source_validator = source_validator
+        @target_validator = target_validator
       end
 
       def read(object)
-        @right_validator.validate(object).map do |validated|
+        @target_validator.validate(object).map do |validated|
           @mapper.read(validated).map do |mapped|
-            @left_validator.validate(mapped)
+            @source_validator.validate(mapped)
           end
         end
       end
 
       def write(object)
-        @left_validator.validate(object).map do |validated|
+        @source_validator.validate(object).map do |validated|
           @mapper.write(validated).map do |mapped|
-            @right_validator.validate(mapped)
+            @target_validator.validate(mapped)
           end
         end
       end

@@ -219,8 +219,8 @@ describe JM::DSL::Syncer do
         define_method(:initialize) do
           super()
 
-          self.left_factory = JM::Factories::NewFactory.new(person_class)
-          self.right_factory = JM::Factories::NewFactory.new(Hash)
+          self.source_factory = JM::Factories::NewFactory.new(person_class)
+          self.target_factory = JM::Factories::NewFactory.new(Hash)
 
           property :name
         end
