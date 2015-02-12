@@ -1,7 +1,7 @@
-describe JM::DSL::Pipe do
+describe JM::DSL::Syncer do
   context "when piping simple properties" do
-    let(:pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -16,21 +16,21 @@ describe JM::DSL::Pipe do
     end
 
     context "to a hash" do
-      it "should pipe properties to keys" do
+      it "should syncer properties to keys" do
         p = person.new("Marten", "Lienen")
 
-        hash = pipe.new.pump(p, {})
+        hash = syncer.new.push(p, {})
 
         expect(hash).to succeed_with(first_name: "Marten", last_name: "Lienen")
       end
     end
 
     context "from a hash" do
-      it "should pipe keys to properties" do
+      it "should syncer keys to properties" do
         hash = { first_name: "Marten", last_name: "Lienen" }
 
         p = person.new
-        result = pipe.new.suck(p, hash)
+        result = syncer.new.pull(p, hash)
 
         expect(result).to succeed_with(person.new("Marten", "Lienen"))
       end
@@ -42,8 +42,8 @@ describe JM::DSL::Pipe do
       Struct.new(:name, :age)
     end
 
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:person_syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -57,7 +57,7 @@ describe JM::DSL::Pipe do
     it "should write the property" do
       person = person_class.new("Frodo", 50)
 
-      hash = person_pipe.new.pump(person, {})
+      hash = person_syncer.new.push(person, {})
 
       expect(hash).to succeed_with(name: "Frodo", age: 50)
     end
@@ -66,7 +66,7 @@ describe JM::DSL::Pipe do
       hash = { name: "Frodo", age: 50 }
 
       person = person_class.new
-      result = person_pipe.new.suck(person, hash)
+      result = person_syncer.new.pull(person, hash)
 
       expect(result).to succeed_with(person_class.new("Frodo", nil))
     end
@@ -77,8 +77,8 @@ describe JM::DSL::Pipe do
       Struct.new(:name, :age)
     end
 
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:person_syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -95,7 +95,7 @@ describe JM::DSL::Pipe do
       it "should write the property, if the condition holds" do
         person = person_class.new("Marten", 21)
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with(name: "Marten", age: 21)
       end
@@ -103,7 +103,7 @@ describe JM::DSL::Pipe do
       it "should not write the property, if the condition fails" do
         person = person_class.new("Alex", 7)
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with(name: "Alex")
       end
@@ -113,7 +113,7 @@ describe JM::DSL::Pipe do
       it "should read the property, if the condition holds" do
         hash = { name: "Alex", age: 14 }
 
-        result = person_pipe.new.suck(person_class.new, hash)
+        result = person_syncer.new.pull(person_class.new, hash)
 
         expect(result).to succeed_with(person_class.new("Alex", 14))
       end
@@ -121,7 +121,7 @@ describe JM::DSL::Pipe do
       it "should not read the property, if the condition fails" do
         hash = { name: "Marten", age: 21 }
 
-        result = person_pipe.new.suck(person_class.new, hash)
+        result = person_syncer.new.pull(person_class.new, hash)
 
         expect(result).to succeed_with(person_class.new("Marten", nil))
       end
@@ -133,8 +133,8 @@ describe JM::DSL::Pipe do
       Struct.new(:name, :age)
     end
 
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:person_syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -148,7 +148,7 @@ describe JM::DSL::Pipe do
     it "should write normally" do
       person = person_class.new("Marten", 21)
 
-      hash = person_pipe.new.pump(person, {})
+      hash = person_syncer.new.push(person, {})
 
       expect(hash).to succeed_with(name: "Marten, 21")
     end
@@ -156,7 +156,7 @@ describe JM::DSL::Pipe do
     it "should be write-only" do
       hash = { name: "Marten, 21" }
 
-      result = person_pipe.new.suck(person_class.new, hash)
+      result = person_syncer.new.pull(person_class.new, hash)
 
       expect(result).to succeed_with(person_class.new(nil, nil))
     end
@@ -167,8 +167,8 @@ describe JM::DSL::Pipe do
       Struct.new(:name, :age)
     end
 
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:person_syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -194,7 +194,7 @@ describe JM::DSL::Pipe do
       it "should use the inline accessor" do
         person = person_class.new("James", 49)
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with(name: "James (49)")
       end
@@ -204,7 +204,7 @@ describe JM::DSL::Pipe do
       it "should use the inline accessor" do
         hash = { name: "James (49)" }
 
-        result = person_pipe.new.suck(person_class.new, hash)
+        result = person_syncer.new.pull(person_class.new, hash)
 
         expect(result).to succeed_with(person_class.new("James", 49))
       end
@@ -212,10 +212,10 @@ describe JM::DSL::Pipe do
   end
 
   context "when piping arrays" do
-    let(:person_pipe) do
+    let(:person_syncer) do
       person_class = person
 
-      Class.new(JM::DSL::Pipe) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -227,10 +227,10 @@ describe JM::DSL::Pipe do
       end
     end
 
-    let(:pipe) do
-      m = person_pipe.new
+    let(:syncer) do
+      m = person_syncer.new
 
-      Class.new(JM::DSL::Pipe) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -251,7 +251,7 @@ describe JM::DSL::Pipe do
       it "should correctly serialize them" do
         comm = community.new([person.new("Marten"), person.new("Lienen")])
 
-        hash = pipe.new.pump(comm, {})
+        hash = syncer.new.push(comm, {})
 
         expect(hash).to succeed_with(people: [{ name: "Marten" },
                                               { name: "Lienen" }])
@@ -262,7 +262,7 @@ describe JM::DSL::Pipe do
       it "should correctly deserialize them" do
         hash = { people: [{ name: "Marten" }, { name: "Lienen" }] }
 
-        comm = pipe.new.suck(community.new, hash)
+        comm = syncer.new.pull(community.new, hash)
 
         expect(comm).to succeed_with(community.new([person.new("Marten"),
                                                     person.new("Lienen")]))
@@ -270,9 +270,9 @@ describe JM::DSL::Pipe do
     end
 
     it "should be possible to define a custom accessor with a block" do
-      person_m = person_pipe.new
+      person_m = person_syncer.new
 
-      m = Class.new(JM::DSL::Pipe) do
+      m = Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -282,10 +282,10 @@ describe JM::DSL::Pipe do
         end
       end
 
-      community_pipe = m.new
+      community_syncer = m.new
       c = community.new([person.new("A")])
 
-      hash = community_pipe.pump(c, {})
+      hash = community_syncer.push(c, {})
 
       expect(hash).to succeed_with(persons: [{ name: "A" }])
     end
@@ -296,8 +296,8 @@ describe JM::DSL::Pipe do
       Struct.new(:name)
     end
 
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:person_syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -318,13 +318,13 @@ describe JM::DSL::Pipe do
 
     context "from a hash" do
       it "should fail if the validation fails" do
-        result = person_pipe.new.suck(person.new, name: "Sven")
+        result = person_syncer.new.pull(person.new, name: "Sven")
 
         expect(result).to fail_with(JM::Error.new([:name], :name_to_short))
       end
 
       it "should succeed if the validation succeeds" do
-        result = person_pipe.new.suck(person.new, name: "Marten")
+        result = person_syncer.new.pull(person.new, name: "Marten")
 
         expect(result).to succeed_with(person.new("Marten"))
       end
@@ -332,13 +332,13 @@ describe JM::DSL::Pipe do
 
     context "to a hash" do
       it "should fail if the validation fails" do
-        result = person_pipe.new.pump(person.new("Sven"), {})
+        result = person_syncer.new.push(person.new("Sven"), {})
 
         expect(result).to fail_with(JM::Error.new([:name], :name_to_short))
       end
 
       it "should succeed if the validation succeeds" do
-        result = person_pipe.new.pump(person.new("Marten"), {})
+        result = person_syncer.new.push(person.new("Marten"), {})
 
         expect(result).to succeed_with(name: "Marten")
       end
@@ -350,8 +350,8 @@ describe JM::DSL::Pipe do
       Struct.new(:name, :age)
     end
 
-    let(:person_pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:person_syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -376,7 +376,7 @@ describe JM::DSL::Pipe do
 
     context "from a hash" do
       it "should merge all failures" do
-        result = person_pipe.new.suck(person.new, name: "M", age: -1)
+        result = person_syncer.new.pull(person.new, name: "M", age: -1)
 
         expect(result).to fail_with([JM::Error.new([:name], :too_short),
                                      JM::Error.new([:age], :not_born_yet)])
@@ -385,7 +385,7 @@ describe JM::DSL::Pipe do
 
     context "to a hash" do
       it "should merge all failures" do
-        result = person_pipe.new.pump(person.new("M", -1), {})
+        result = person_syncer.new.push(person.new("M", -1), {})
 
         expect(result).to fail_with([JM::Error.new([:name], :too_short),
                                      JM::Error.new([:age], :not_born_yet)])
@@ -398,8 +398,8 @@ describe JM::DSL::Pipe do
       Struct.new(:numbers)
     end
 
-    let(:number_pipe) do
-      Class.new(JM::Pipe) do
+    let(:number_syncer) do
+      Class.new(JM::Syncer) do
         def read(number)
           if (5..9).include?(number)
             JM::Failure.new(JM::Error.new([], :unwanted_number))
@@ -412,10 +412,10 @@ describe JM::DSL::Pipe do
       end
     end
 
-    let(:pipe) do
-      number_m = number_pipe
+    let(:syncer) do
+      number_m = number_syncer
 
-      Class.new(JM::DSL::Pipe) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -426,7 +426,7 @@ describe JM::DSL::Pipe do
 
     context "from a hash" do
       it "should prepend the errors with the indices" do
-        result = pipe.new.suck(container.new, numbers: [2, 7, 3, 9])
+        result = syncer.new.pull(container.new, numbers: [2, 7, 3, 9])
 
         errors = [JM::Error.new([:numbers, 1], :unwanted_number),
                   JM::Error.new([:numbers, 3], :unwanted_number)]
@@ -440,8 +440,8 @@ describe JM::DSL::Pipe do
       Struct.new(:numbers)
     end
 
-    let(:pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -462,7 +462,7 @@ describe JM::DSL::Pipe do
 
     context "from a hash" do
       it "should prepend the errors with the indices" do
-        result = pipe.new.suck(container.new, numbers: [2, 7, 3, 9])
+        result = syncer.new.pull(container.new, numbers: [2, 7, 3, 9])
 
         expect(result).to fail_with([JM::Error.new([:numbers, 0], :too_small),
                                      JM::Error.new([:numbers, 2], :too_small)])
@@ -475,8 +475,8 @@ describe JM::DSL::Pipe do
       Struct.new(:numbers)
     end
 
-    let(:pipe) do
-      Class.new(JM::DSL::Pipe) do
+    let(:syncer) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -497,7 +497,7 @@ describe JM::DSL::Pipe do
 
     context "from a hash" do
       it "should fail if the validation fails" do
-        result = pipe.new.suck(container.new, numbers: [1, 5])
+        result = syncer.new.pull(container.new, numbers: [1, 5])
 
         expect(result).to fail_with(JM::Error.new([:numbers], :too_few))
       end
@@ -521,10 +521,10 @@ describe JM::DSL::Pipe do
       end
     end
 
-    let(:pipe) do
+    let(:syncer) do
       validator_class = validator
 
-      Class.new(JM::DSL::Pipe) do
+      Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
           super()
 
@@ -537,7 +537,7 @@ describe JM::DSL::Pipe do
 
     context "from a hash" do
       it "should fail if the validation fails" do
-        result = pipe.new.suck(container.new, numbers: [1, 5])
+        result = syncer.new.pull(container.new, numbers: [1, 5])
 
         expect(result).to fail_with(JM::Error.new([:numbers], :too_many))
       end

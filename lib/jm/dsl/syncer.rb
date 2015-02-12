@@ -1,14 +1,14 @@
 module JM
   module DSL
-    # A DSL for composing custom mappers
+    # A DSL for composing custom syncers
     #
-    # It is the base for all mappers. At it's heart is the {#pipe} method. It
-    # let's you register a {JM::Pipe}. When writing an object, the object will
-    # be {JM::Pipe#pipe}d through all pipes. And when reading an object, it will
-    # be {JM::Pipe#slurp}ed through all pipes. So at this central point, you can
-    # register custom pipes to take full control of the mapping process. Or you
-    # could just use one of the DSL methods, that build a thin layer on top of
-    # {#pipe}.
+    # It is the base for all mappers. At it's heart is the {#syncer} method. It
+    # let's you register a {JM::Syncer}. When writing an object, the object will
+    # be {JM::Syncer#push}ed through all syncers. And when reading an object, it
+    # will be {JM::Syncer#pull}ed through all syncers. So at this central point,
+    # you can register custom syncers to take full control of the mapping
+    # process. Or you could just use one of the DSL methods, that build a thin
+    # layer on top of {#syncer}.
     #
     # You are supposed to subclass this class, configure your mapper with the
     # available configuration methods and extend the DSL to fit your mapping
@@ -21,42 +21,42 @@ module JM
     # lots of ruby trickery. A simple example would be a parent class for all
     # mappers for HAL collection resources. In the derived classes you can
     # easily pass things like URI templates and page numbers via `#super`.
-    class Pipe < JM::Pipe
+    class Syncer < JM::Syncer
       def initialize
-        @pipes = []
+        @syncers = []
       end
 
-      # Register a pipe
+      # Register a syncer
       #
-      # This is the most general DSL method. Because pipes allow you to do
+      # This is the most general DSL method. Because syncers allow you to do
       # arbitrary mapping, this method gives you complete control and all other
       # methods are built on top of it. So methods like {#property} are actually
-      # just shorthands for {#pipe} calls.
+      # just shorthands for {#syncer} calls.
       #
-      # Other methods should pass their keyword arguments to {#pipe}, so that
+      # Other methods should pass their keyword arguments to {#syncer}, so that
       # they can be configured to be write-only etc. All built-in methods follow
       # that principle.
       #
-      # @param [JM::Pipe] pipe
-      # @param [true, false] write_only Make the pipe write-only
+      # @param [JM::Syncer] syncer
+      # @param [true, false] write_only Make the syncer write-only
       # @param [Proc] read_if It is passed the value to read.
       #   Only read, if the lambda evaluates to true
       # @param [Proc] write_if It is passed the value to write.
       #   Only write, if the lambda evaluates to true
-      def pipe(pipe, write_only: false, write_if: nil, read_if: nil)
+      def syncer(syncer, write_only: false, write_if: nil, read_if: nil)
         if write_only
-          pipe = Pipes::WriteOnlyPipe.new(pipe)
+          syncer = Syncers::WriteOnlySyncer.new(syncer)
         end
 
         if write_if
-          pipe = Pipes::ConditionalWritePipe.new(pipe, write_if)
+          syncer = Syncers::ConditionalWriteSyncer.new(syncer, write_if)
         end
 
         if read_if
-          pipe = Pipes::ConditionalReadPipe.new(pipe, read_if)
+          syncer = Syncers::ConditionalReadSyncer.new(syncer, read_if)
         end
 
-        @pipes << pipe
+        @syncers << syncer
       end
 
       # Map a property
@@ -80,7 +80,7 @@ module JM
       # @param [JM::Accessor] accessor Customize, how the source is accessed
       # @param [JM::Mapper] mapper Convert the value during mapping
       # @param [JM::Validator] validator Validate the value
-      # @param [Hash] args Other options are passed to {#pipe}
+      # @param [Hash] args Other options are passed to {#syncer}
       # @param block Configure the {PropertyBuilder}
       # @see PropertyBuilder
       def property(name,
@@ -92,7 +92,7 @@ module JM
         builder = PropertyBuilder.new(name, accessor, validator, mapper)
         builder.configure(&block)
 
-        pipe(builder.to_pipe, **args)
+        syncer(builder.to_syncer, **args)
       end
 
       # A shorthand to register write-only properties
@@ -138,7 +138,7 @@ module JM
       # @param [JM::Validator] validator Validate the whole array
       # @param [JM::Validator] element_validator Validate individual array
       #   elements
-      # @param [Hash] args Passed on to {#pipe}
+      # @param [Hash] args Passed on to {#syncer}
       # @param block Configure the {ArrayBuilder}
       # @see ArrayBuilder
       def array(name,
@@ -155,13 +155,14 @@ module JM
                                    element_validator)
         builder.configure(&block)
 
-        pipe(builder.to_pipe, **args)
+        syncer(builder.to_syncer, **args)
       end
 
-      # Pump the `source` through all registered pipes into `target`
-      def pump(source, target)
-        obj, failure = @pipes.reduce([target, Failure.new]) do |(t, f), pipe|
-          res = pipe.pump(source, t)
+      # Push the `source` through all registered syncers into `target`
+      def push(source, target)
+        init = [target, Failure.new]
+        obj, failure = @syncers.reduce(init) do |(t, f), syncer|
+          res = syncer.push(source, t)
 
           case res
           when Success then [res.value, f]
@@ -176,10 +177,11 @@ module JM
         end
       end
 
-      # Slurp the `target` through all registered pipes into `source`
-      def suck(source, target)
-        obj, failure = @pipes.reduce([source, Failure.new]) do |(s, f), pipe|
-          res = pipe.suck(s, target)
+      # Pull the `target` through all registered syncers into `source`
+      def pull(source, target)
+        init = [source, Failure.new]
+        obj, failure = @syncers.reduce(init) do |(s, f), syncer|
+          res = syncer.pull(s, target)
 
           case res
           when Success then [res.value, f]

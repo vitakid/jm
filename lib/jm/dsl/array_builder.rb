@@ -1,6 +1,6 @@
 module JM
   module DSL
-    # Builder for an array pipe
+    # Builder for an array syncer
     class ArrayBuilder < Builder
       def initialize(name,
                      accessor,
@@ -71,17 +71,17 @@ module JM
         @element_mapper.instance_exec(&block)
       end
 
-      # Create an array pipe from the configuration
+      # Create an array syncer from the configuration
       #
-      # @return [JM::Pipe]
-      def to_pipe
+      # @return [JM::Syncer]
+      def to_syncer
         args = {
           source_accessor: build_accessor,
           mapper: build_mapper,
           target_accessor: Accessors::HashKeyAccessor.new(@name)
         }
 
-        Pipes::CompositePipe.new(**args)
+        Syncers::CompositeSyncer.new(**args)
       end
 
       private

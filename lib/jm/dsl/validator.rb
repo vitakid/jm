@@ -2,7 +2,7 @@ module JM
   module DSL
     # A DSL for creating validators
     #
-    # In general it is very similar to {DSL::Pipe}. It is all based on the
+    # In general it is very similar to {DSL::Syncer}. It is all based on the
     # {#validator} method, that can be used to directly register
     # validators. Other methods are in general short hands for {#validator}
     # calls.

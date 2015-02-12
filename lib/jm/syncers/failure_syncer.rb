@@ -1,18 +1,18 @@
 require "i18n"
 
 module JM
-  module Pipes
+  module Syncers
     # Map {Failure}s to JSON
     #
-    # @see ErrorPipe The pipe, that maps individual errors
-    class FailurePipe < DSL::HALPipe
+    # @see ErrorSyncer The syncer, that maps individual errors
+    class FailureSyncer < DSL::HALSyncer
       def initialize
         super
 
         self.left_factory = Factories::NewFactory.new(Hash)
         self.right_factory = Factories::NewFactory.new(Hash)
 
-        array :errors, mapper: ErrorPipe.new.to_mapper
+        array :errors, mapper: ErrorSyncer.new.to_mapper
       end
     end
   end

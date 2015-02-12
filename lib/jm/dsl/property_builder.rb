@@ -1,6 +1,6 @@
 module JM
   module DSL
-    # Builder for a property pipe
+    # Builder for a property syncer
     class PropertyBuilder < Builder
       def initialize(name, accessor, validator, mapper)
         @name = name
@@ -53,10 +53,10 @@ module JM
         @validator.instance_exec(&block)
       end
 
-      # Create a property pipe from the configuration
+      # Create a property syncer from the configuration
       #
-      # @return [JM::Pipe]
-      def to_pipe
+      # @return [JM::Syncer]
+      def to_syncer
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor
@@ -83,7 +83,7 @@ module JM
           target_accessor: Accessors::HashKeyAccessor.new(@name)
         }
 
-        Pipes::CompositePipe.new(**args)
+        Syncers::CompositeSyncer.new(**args)
       end
     end
   end

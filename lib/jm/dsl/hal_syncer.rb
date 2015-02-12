@@ -1,7 +1,7 @@
 module JM
   module DSL
     # An extended DSL with specialized methods for mapping to HAL
-    class HALPipe < DSL::Pipe
+    class HALSyncer < DSL::Syncer
       def initialize
         super
 
@@ -24,15 +24,15 @@ module JM
       # object, while the `write` block defines, how to extract the URI
       # parameters.
       #
-      # Notice, that the `read` block is not used, when {#suck}ing data in. If
+      # Notice, that the `read` block is not used, when {#pull}ing data in. If
       # you want to instantiate the object from the `self` link, you will have
-      # to do it yourself with `pipe.link_mapper.read(<self link>)` and the pass
-      # that object to {#suck}. The reason for this is, that the general use
-      # case for jm is assumed to be web APIs. So when you are receiving a PUT
-      # request to update some object, the object is determined by the request
-      # URI. If the actually instantiated object was determined by some URI in
-      # the request body, a user could update any object, even if he was only
-      # allowed access to a specific one, and so bypass your authorization.
+      # to do it yourself with `syncer.link_mapper.read(<self link>)` and the
+      # pass that object to {#pull}. The reason for this is, that the general
+      # use case for jm is assumed to be web APIs. So when you are receiving a
+      # PUT request to update some object, the object is determined by the
+      # request URI. If the actually instantiated object was determined by some
+      # URI in the request body, a user could update any object, even if he was
+      # only allowed access to a specific one, and so bypass your authorization.
       #
       # @example
       #   self_link "/people/{name}" do
@@ -95,7 +95,7 @@ module JM
       # @param [String] uri_template RFC6570 URI template
       # @param [JM::Accessor] params_accessor Accessor to read template params
       #   from source and write them back
-      # @param [Hash] args Passed on to {#pipe}
+      # @param [Hash] args Passed on to {#syncer}
       # @param block Define the params_accessor inline
       # @see LinkBuilder
       def inline_link(rel,
@@ -109,7 +109,7 @@ module JM
                                   HAL::LinkMapper.new(uri_template))
         builder.configure(&block)
 
-        pipe(builder.to_pipe, **args)
+        syncer(builder.to_syncer, **args)
       end
 
       # Link to a resource by reusing the "self" link of another mapper
@@ -118,7 +118,7 @@ module JM
       # @param [JM::Mapper] mapper Mapper to reuse
       # @param [JM::Accessor] accessor Accessor for the object, that will be
       #   passed to the mapper
-      # @param [Hash] args Passed on to {#pipe}
+      # @param [Hash] args Passed on to {#syncer}
       # @param block Define the accessor inline
       # @see LinkBuilder
       def mapper_link(rel,
@@ -130,7 +130,7 @@ module JM
         builder = LinkBuilder.new(rel, accessor, mapper.link_mapper)
         builder.configure(&block)
 
-        pipe(builder.to_pipe, **args)
+        syncer(builder.to_syncer, **args)
       end
 
       # Link to an array of resources
@@ -139,7 +139,7 @@ module JM
       # @param [JM::DSL::HALMapper] mapper Mapper, that is applied to all array
       #   items
       # @param [JM::Accessor] accessor Accessor for the array
-      # @param [Hash] args Passed on to {#pipe}
+      # @param [Hash] args Passed on to {#syncer}
       # @param block Define the accessor inline
       # @see LinkBuilder
       def links(rel, mapper, accessor: nil, **args, &block)
@@ -150,7 +150,7 @@ module JM
                                   [])
         builder.configure(&block)
 
-        pipe(builder.to_pipe, **args)
+        syncer(builder.to_syncer, **args)
       end
 
       # Embed a resource
@@ -161,7 +161,7 @@ module JM
       # @param [Symbol] rel Link relation
       # @param [JM::Mapper] mapper Mapper for the object
       # @param [JM::Accessor] accessor Accessor for the object
-      # @param [Hash] args Passed on to {#pipe}
+      # @param [Hash] args Passed on to {#syncer}
       # @param block Define the accessor and/or mapper inline
       # @see EmbeddedBuilder
       def embedded(rel,
@@ -173,7 +173,7 @@ module JM
         builder = EmbeddedBuilder.new(rel, accessor, mapper)
         builder.configure(&block)
 
-        pipe(builder.to_pipe, write_only: write_only, **args)
+        syncer(builder.to_syncer, write_only: write_only, **args)
       end
 
       # Embed an array of resources
@@ -184,7 +184,7 @@ module JM
       # @param [Symbol] rel Link relation
       # @param [JM::Mapper] mapper Mapper the array items
       # @param [JM::Accessor] accessor Accessor for the array
-      # @param [Hash] args Passed on to {#pipe}
+      # @param [Hash] args Passed on to {#syncer}
       # @param block Define the accessor and/or item mapper inline
       # @see EmbeddedBuilder
       def embeddeds(rel,
@@ -198,10 +198,10 @@ module JM
                                        Mappers::ArrayMapper.new(mapper))
         builder.configure(&block)
 
-        pipe(builder.to_pipe, write_only: write_only, **args)
+        syncer(builder.to_syncer, write_only: write_only, **args)
       end
 
-      def pump(source, target)
+      def push(source, target)
         result = super(source, target)
 
         if @link_accessor

@@ -9,7 +9,7 @@
   - [Success and Failure](#success-and-failure)
   - [Accessors](#accessors)
   - [Mapper](#mapper)
-  - [Pipes](#pipes)
+  - [Syncers](#syncers)
 - [Documentation](#documentation)
 - [Installation](#installation)
 - [Contributing](#contributing)
@@ -99,7 +99,7 @@ There are three concepts, that are the key to understanding `jm`.
 
 - *Accessors* abstract reading from and writing to objects
 - *Mappers* map values from one representation to another
-- *Pipes* give you total control over synchronizing your objects and their JSON
+- *Syncers* give you total control over synchronizing your objects and their JSON
 representations
 
 `jm` strives to pick good defaults for you, but at the same time give you the
@@ -216,36 +216,36 @@ mapper.read("Wed, 13 Aug 2014 00:00:00 +0000")
 # => #<Date: 2014-08-13 ((2456883j,0s,0n),+0s,2299161j)>
 ```
 
-### Pipes
+### Syncers
 
-Defining a custom pipe is the most general way of pushing data from one
-structure into another and slurping it back.
+Defining a custom syncer is the most general way of pushing data from one
+structure into another and pulling it back.
 
 ```ruby
 Person = Struct.new(:name, :age)
 
-class PersonPipe < JM::Pipe
-  def pipe(person, hash)
+class PersonSyncer < JM::Syncer
+  def push(person, hash)
     hash[:name] = person.name
     hash[:info] ||= {}
     hash[:info][:age] = person.age
   end
 
-  def slurp(person, hash)
+  def pull(person, hash)
     person.name = hash[:name]
     person.age = hash[:info][:age]
   end
 end
 
-pipe = PersonPipe.new
+syncer = PersonSyncer.new
 person = Person.new("Gandalf", 513)
 hash = {}
 
-pipe.pump(person, hash)
+syncer.push(person, hash)
 hash
 # => {:name=>"Gandalf", :info=>{:age=>513}}
 
-pipe.slurp(person, {name: "Frodo", info: {age: 50}})
+syncer.pull(person, {name: "Frodo", info: {age: 50}})
 person
 # => #<struct Person name="Frodo", age=50>
 ```

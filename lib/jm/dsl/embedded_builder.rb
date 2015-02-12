@@ -1,6 +1,6 @@
 module JM
   module DSL
-    # Builder for pipes for embedding objects
+    # Builder for syncers for embedding objects
     class EmbeddedBuilder < Builder
       def initialize(rel, accessor, mapper)
         @rel = rel
@@ -37,13 +37,13 @@ module JM
       #   end
       # @param block Block to configure the mapper
       def mapper(&block)
-        pipe = HALPipe.new
-        pipe.instance_exec(&block)
+        syncer = HALSyncer.new
+        syncer.instance_exec(&block)
 
-        @mapper = pipe.to_mapper
+        @mapper = syncer.to_mapper
       end
 
-      def to_pipe
+      def to_syncer
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor
@@ -62,7 +62,7 @@ module JM
           target_accessor: HAL::EmbeddedAccessor.new(@rel)
         }
 
-        Pipes::CompositePipe.new(config)
+        Syncers::CompositeSyncer.new(config)
       end
     end
   end

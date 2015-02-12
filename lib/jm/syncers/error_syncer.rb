@@ -1,5 +1,5 @@
 module JM
-  module Pipes
+  module Syncers
     # Map {Error}s to JSON
     #
     # @example An example output
@@ -27,7 +27,7 @@ module JM
     #   # - jm.errors.person.age.too_young
     #   # - jm.errors.age.too_young
     #   # - jm.errors.too_young
-    class ErrorPipe < DSL::HALPipe
+    class ErrorSyncer < DSL::HALSyncer
       # The root scope for error messages
       SCOPE = %w(jm errors)
 

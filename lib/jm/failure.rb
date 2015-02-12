@@ -4,7 +4,7 @@ module JM
   # Failures can be converted to JSON with {#to_json}, so that you can send the
   # error messages back to the client.
   class Failure < Result
-    MAPPER = Pipes::FailurePipe.new.to_mapper
+    MAPPER = Syncers::FailureSyncer.new.to_mapper
 
     # @return [[JM::Error]] Errors, that lead to the failure
     attr_reader :errors

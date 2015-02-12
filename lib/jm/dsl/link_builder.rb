@@ -1,6 +1,6 @@
 module JM
   module DSL
-    # Builder for link pipes
+    # Builder for link syncers
     class LinkBuilder < Builder
       def initialize(rel, accessor, mapper, default_value = nil)
         @rel = rel
@@ -19,8 +19,8 @@ module JM
         @set = block
       end
 
-      # Create a link pipe from settings
-      def to_pipe
+      # Create a link syncer from settings
+      def to_syncer
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor
@@ -37,7 +37,7 @@ module JM
           target_accessor: HAL::LinkAccessor.new(@rel, @default_value)
         }
 
-        Pipes::CompositePipe.new(config)
+        Syncers::CompositeSyncer.new(config)
       end
     end
   end

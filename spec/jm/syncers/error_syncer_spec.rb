@@ -1,5 +1,5 @@
-describe JM::Pipes::ErrorPipe do
-  let(:pipe) { JM::Pipes::ErrorPipe.new }
+describe JM::Syncers::ErrorSyncer do
+  let(:syncer) { JM::Syncers::ErrorSyncer.new }
 
   describe "Adding messages" do
     before(:each) do
@@ -14,7 +14,7 @@ describe JM::Pipes::ErrorPipe do
     it "should add a nil 'messages' key, if there is no translation" do
       error = JM::Error.new([], :invalid)
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => [], "name" => :invalid, "message" => nil
@@ -26,7 +26,7 @@ describe JM::Pipes::ErrorPipe do
       error = JM::Error.new([], :invalid)
       I18n.backend["jm.errors.invalid"] = "Invalid data"
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => [], "name" => :invalid, "message" => "Invalid data"
@@ -38,7 +38,7 @@ describe JM::Pipes::ErrorPipe do
       error = JM::Error.new(%w(nested path), :invalid)
       I18n.backend["jm.errors.nested.path.invalid"] = "Not valid"
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => %w(nested path),
@@ -52,7 +52,7 @@ describe JM::Pipes::ErrorPipe do
       error = JM::Error.new(%w(nested path), :invalid)
       I18n.backend["jm.errors.invalid"] = "Not valid"
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => %w(nested path),
@@ -67,7 +67,7 @@ describe JM::Pipes::ErrorPipe do
       I18n.backend["jm.errors.invalid"] = "Generally bad"
       I18n.backend["jm.errors.path.invalid"] = "Specifically bad"
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => %w(nested path),
@@ -81,7 +81,7 @@ describe JM::Pipes::ErrorPipe do
       error = JM::Error.new(%w(person age), :too_young, age: 5)
       I18n.backend["jm.errors.too_young"] = "%{age} is too young"
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => %w(person age),
@@ -95,7 +95,7 @@ describe JM::Pipes::ErrorPipe do
       I18n.backend = @backend
       error = JM::Errors::DateISO8601IncompatibleError.new([], "not-compatible")
 
-      result = pipe.pump(error, {})
+      result = syncer.push(error, {})
 
       expected = {
         "path" => [],

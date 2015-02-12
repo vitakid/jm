@@ -1,12 +1,12 @@
-describe JM::DSL::HALPipe do
+describe JM::DSL::HALSyncer do
   let(:pet_class) do
     Struct.new(:name)
   end
 
-  let(:pet_pipe) do
+  let(:pet_syncer) do
     pet_cls = pet_class
 
-    Class.new(JM::DSL::HALPipe) do
+    Class.new(JM::DSL::HALSyncer) do
       define_method(:initialize) do
         super()
 
@@ -32,10 +32,10 @@ describe JM::DSL::HALPipe do
   end
 
   context "when mapping a resource with 'self' link" do
-    let(:pipe_class) do
+    let(:syncer_class) do
       person = person_class
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -62,7 +62,7 @@ describe JM::DSL::HALPipe do
       it "should generate a self link" do
         person = person_class.new("Marten", "Lienen", 21)
 
-        hash = pipe_class.new.pump(person, {})
+        hash = syncer_class.new.push(person, {})
 
         resource = {
           "_links" => {
@@ -84,7 +84,7 @@ describe JM::DSL::HALPipe do
           "age" => 21
         }
 
-        result = pipe_class.new.suck(person_class.new, hash)
+        result = syncer_class.new.pull(person_class.new, hash)
 
         expect(result).to succeed_with(person_class.new(nil, nil, 21))
       end
@@ -92,8 +92,8 @@ describe JM::DSL::HALPipe do
   end
 
   context "when mapping a resource without a 'self' link" do
-    let(:pipe_class) do
-      Class.new(JM::DSL::HALPipe) do
+    let(:syncer_class) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -106,7 +106,7 @@ describe JM::DSL::HALPipe do
       it "should make no difference" do
         person = person_class.new("Marten", "Lienen", 21)
 
-        result = pipe_class.new.pump(person, {})
+        result = syncer_class.new.push(person, {})
 
         expect(result).to succeed_with("age" => 21)
       end
@@ -118,10 +118,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pet)
     end
 
-    let(:person_pipe) do
-      pet_m = pet_pipe
+    let(:person_syncer) do
+      pet_m = pet_syncer
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -133,10 +133,10 @@ describe JM::DSL::HALPipe do
     end
 
     context "and mapping to a hash" do
-      it "should use the pipe's 'self' link pipe" do
+      it "should use the syncer's 'self' link syncer" do
         person = person_class.new("Frodo", pet_class.new("Finchen"))
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with("_links" => {
                                        "pet" => { "href" => "/pets/Finchen" }
@@ -150,7 +150,7 @@ describe JM::DSL::HALPipe do
         hash = { "_links" => { "pet" => { "href" => "/pets/Finchen" } },
                  "name" => "Frodo" }
 
-        result = person_pipe.new.suck(person_class.new, hash)
+        result = person_syncer.new.pull(person_class.new, hash)
 
         expected = person_class.new("Frodo",
                                     pet_class.new("Finchen"))
@@ -165,11 +165,11 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pet)
     end
 
-    let(:person_pipe) do
-      pet_m = pet_pipe
+    let(:person_syncer) do
+      pet_m = pet_syncer
       person_cls = person_class
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -194,7 +194,7 @@ describe JM::DSL::HALPipe do
       it "should create both links" do
         person = person_class.new("Marten", pet_class.new("Ronja"))
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with("_links" => {
                                        "self" => { "href" => "/people/Marten" },
@@ -208,7 +208,7 @@ describe JM::DSL::HALPipe do
         hash = { "_links" => { "self" => { "href" => "/people/Marten" },
                                "pet" => { "href" => "/pets/Ronja" } } }
 
-        person = person_pipe.new.suck(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash)
 
         expect(person).to succeed_with(person_class.new(nil,
                                                         pet_class.new("Ronja")))
@@ -221,10 +221,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pets)
     end
 
-    let(:person_pipe) do
-      pet_m = pet_pipe
+    let(:person_syncer) do
+      pet_m = pet_syncer
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -240,7 +240,7 @@ describe JM::DSL::HALPipe do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with("_links" => {
                                        "pet" => [{ "href" => "/pets/Finchen" },
@@ -253,7 +253,7 @@ describe JM::DSL::HALPipe do
         hash = { "_links" => { "pet" => [{ "href" => "/pets/Finchen" },
                                          { "href" => "/pets/Ronja" }] } }
 
-        person = person_pipe.new.suck(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash)
 
         expected = person_class.new(nil, [pet_class.new("Finchen"),
                                           pet_class.new("Ronja")])
@@ -267,10 +267,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pet)
     end
 
-    let(:person_pipe) do
-      pet_m = pet_pipe
+    let(:person_syncer) do
+      pet_m = pet_syncer
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -285,7 +285,7 @@ describe JM::DSL::HALPipe do
       it "should embed the pet" do
         person = person_class.new("Marten", pet_class.new("Finchen"))
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         resource = {
           "_embedded" => {
@@ -315,7 +315,7 @@ describe JM::DSL::HALPipe do
           "name" => "Marten"
         }
 
-        person = person_pipe.new.suck(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash)
 
         expected = person_class.new("Marten", pet_class.new("Finchen"))
         expect(person).to succeed_with(expected)
@@ -328,10 +328,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pet)
     end
 
-    let(:person_pipe) do
+    let(:person_syncer) do
       pet_cls = pet_class
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -349,10 +349,10 @@ describe JM::DSL::HALPipe do
     end
 
     context "to a hash" do
-      it "should use the inline pipe" do
+      it "should use the inline syncer" do
         person = person_class.new("Marten", pet_class.new("Finchen"))
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         expect(hash).to succeed_with("name" => "Marten",
                                      "_embedded" => {
@@ -364,7 +364,7 @@ describe JM::DSL::HALPipe do
     end
 
     context "from a hash" do
-      it "should use the inline pipe" do
+      it "should use the inline syncer" do
         hash = {
           "name" => "Marten",
           "_embedded" => {
@@ -374,7 +374,7 @@ describe JM::DSL::HALPipe do
           }
         }
 
-        person = person_pipe.new.suck(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash)
 
         expected = person_class.new("Marten", pet_class.new("Finchen"))
         expect(person).to succeed_with(expected)
@@ -387,10 +387,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pets)
     end
 
-    let(:person_pipe) do
-      pet_m = pet_pipe
+    let(:person_syncer) do
+      pet_m = pet_syncer
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -406,7 +406,7 @@ describe JM::DSL::HALPipe do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         resource = {
           "_embedded" => {
@@ -450,7 +450,7 @@ describe JM::DSL::HALPipe do
           "name" => "Marten"
         }
 
-        person = person_pipe.new.suck(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash)
 
         expected = person_class.new("Marten", [pet_class.new("Finchen"),
                                                pet_class.new("Ronja")])
@@ -464,10 +464,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pets)
     end
 
-    let(:person_pipe) do
+    let(:person_syncer) do
       pet_cls = pet_class
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -485,11 +485,11 @@ describe JM::DSL::HALPipe do
     end
 
     context "to a hash" do
-      it "should use the inline pipe" do
+      it "should use the inline syncer" do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_pipe.new.pump(person, {})
+        hash = person_syncer.new.push(person, {})
 
         resource = {
           "_embedded" => {
@@ -510,7 +510,7 @@ describe JM::DSL::HALPipe do
     end
 
     context "from a hash" do
-      it "should use the inline pipe" do
+      it "should use the inline syncer" do
         hash = {
           "_embedded" => {
             "pets" => [
@@ -525,7 +525,7 @@ describe JM::DSL::HALPipe do
           "name" => "Marten"
         }
 
-        person = person_pipe.new.suck(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash)
 
         expected = person_class.new("Marten", [pet_class.new("Finchen"),
                                                pet_class.new("Ronja")])
@@ -539,10 +539,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :favorite, :pets)
     end
 
-    let(:person_pipe) do
-      pet_m = pet_pipe
+    let(:person_syncer) do
+      pet_m = pet_syncer
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -575,7 +575,7 @@ describe JM::DSL::HALPipe do
         "name" => "Marten"
       }
 
-      person = person_pipe.new.suck(person_class.new, hash)
+      person = person_syncer.new.pull(person_class.new, hash)
 
       expect(person).to succeed_with(person_class.new(nil, nil, nil))
     end
@@ -586,10 +586,10 @@ describe JM::DSL::HALPipe do
       Struct.new(:name, :pet)
     end
 
-    let(:pet_pipe) do
+    let(:pet_syncer) do
       pet_c = pet_class
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -602,10 +602,10 @@ describe JM::DSL::HALPipe do
       end
     end
 
-    let(:person_pipe) do
-      pet_p = pet_pipe.new
+    let(:person_syncer) do
+      pet_p = pet_syncer.new
 
-      Class.new(JM::DSL::HALPipe) do
+      Class.new(JM::DSL::HALSyncer) do
         define_method(:initialize) do
           super()
 
@@ -615,7 +615,7 @@ describe JM::DSL::HALPipe do
     end
 
     it "should not write anything" do
-      result = person_pipe.new.suck(person_class.new, {})
+      result = person_syncer.new.pull(person_class.new, {})
 
       expect(result).to succeed_with(person_class.new)
     end
