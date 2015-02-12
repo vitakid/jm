@@ -191,9 +191,10 @@ Some useful accessors are already defined
 
 ### Mapper
 
-Mappers transform values. So you pass a mapper, when you would like to transform
-a value during the mapping process. Let's say you would like to serialize `Date`
-objects to a custom format.
+Mappers transform [values](http://en.wikipedia.org/wiki/Value_object). So you
+pass a mapper, when you would like to transform a value during the mapping
+process. Let's say you would like to serialize `Date` objects to a custom
+format.
 
 ```ruby
 class DateMapper < JM::Mapper
@@ -240,7 +241,7 @@ pipe = PersonPipe.new
 person = Person.new("Gandalf", 513)
 hash = {}
 
-pipe.pipe(person, hash)
+pipe.pump(person, hash)
 hash
 # => {:name=>"Gandalf", :info=>{:age=>513}}
 
