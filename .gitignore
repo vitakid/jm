@@ -11,3 +11,6 @@ pkg
 
 # Generated documentation
 doc
+
+# Local ruby version
+.ruby-version
