@@ -60,7 +60,7 @@ module JM
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor
-          accessor =  @accessor
+          accessor = @accessor
         else
           raise Exception.new("You have to define an accessor")
         end
