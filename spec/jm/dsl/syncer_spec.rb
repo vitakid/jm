@@ -435,7 +435,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when synchronizing an array property with inline validated elements" do
+  context "when synchronizing an array property with inline validators" do
     let(:container) do
       Struct.new(:numbers)
     end
