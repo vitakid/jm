@@ -2,8 +2,8 @@ module JM
   # A mapper is an abstraction of the conversion of values
   #
   # A mapper can convert objects from some kind of source type/structure to some
-  # kind of target type/structure. What this precisely means, is source to the
-  # subclasses of {Mapper}.
+  # kind of target type/structure. What this precisely means depends on the
+  # specific subclass of {Mapper}.
   #
   # You can visualize it like this
   #

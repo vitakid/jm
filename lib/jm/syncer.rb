@@ -3,7 +3,7 @@ module JM
   #
   # It takes a certain aspect of the source object and pushes it onto the target
   # object or pulls it back onto the source object. An aspect is for example the
-  # value of a certain attribute. Then you can combine n syncers to copy all n
+  # value of an attribute. Then you can combine n syncers to copy all n
   # attributes at once.
   #
   # When {#source_factory} and {#target_factory} are set, you can use any syncer

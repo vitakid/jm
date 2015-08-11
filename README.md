@@ -99,8 +99,8 @@ There are three concepts, that are the key to understanding `jm`.
 
 - *Accessors* abstract reading from and writing to objects
 - *Mappers* map values from one representation to another
-- *Syncers* give you total control over synchronizing your objects and their JSON
-representations
+- *Syncers* give you total control over synchronizing your objects and their
+  JSON representations
 
 `jm` strives to pick good defaults for you, but at the same time give you the
 possibility to take control and implement arbitrarily complex mapping
@@ -114,16 +114,16 @@ name.
 
 ### Success and Failure
 
-But first you have to understand, that every operation could potentially
+First you have to understand, that every operation could potentially
 fail. Reading a value from a hash could fail. Constructing an object from a
-string could fail. Your first thought might be, that raising an exception would
-be good fit for such a failure. It is not. A lot of the time, we are mapping
-user input to objects, and users need to here better error messages than
-"Something went wrong" or "Hey, you cannot be born in the future". Of course the
-second version is a step in the right direction, but for efficiency reasons, the
-user would like hear everything, that is wrong in his input, all at
-once. Therefore errors have to be accumulated through the whole process. We
-implement that by returning `JM::Result`s instead of returning values or raising
+string could fail. At first you might think, that raising an exception would be
+a good fit for such a failure. It is not. A lot of the time, we are mapping user
+input to objects, and users need to hear better error messages than "Something
+went wrong" or "Hey, you cannot be born in the future". Of course the second
+version is a step in the right direction, but for efficiency reasons, the user
+would like hear everything, that is wrong in his input, all at once. Therefore
+errors have to be accumulated through the whole process. We implement that by
+returning `JM::Result`s instead of returning values or raising
 exceptions. Normal return values are wrapped in `JM::Success` while errors are
 wrapped in a `JM::Failure`. Then throughout the whole mapping process, failures
 are merged and can be returned to the user/client.
@@ -154,9 +154,9 @@ These three can later be used to generate error messages.
 
 ### Accessors
 
-You pass an accessor, when you want to customize how to read and write your
-object. Let's implement an accessor, that accesses the `name` property of an
-object.
+You pass an accessor, when you want to customize how to read from and write to
+your object. Let's implement an accessor, that accesses the `name` property of
+an object.
 
 ```ruby
 class NameAccessor < JM::Accessor
@@ -193,33 +193,41 @@ Some useful accessors are already defined
 
 Mappers transform [values](http://en.wikipedia.org/wiki/Value_object). So you
 pass a mapper, when you would like to transform a value during the mapping
-process. Let's say you would like to serialize `Date` objects to a custom
+process. You might for example want to serialize `Date` objects to a custom
 format.
 
 ```ruby
 class DateMapper < JM::Mapper
   def read(string)
-    Date.rfc822(string)
+    JM::Success.new(Date.rfc822(string))
+  rescue ArgumentError
+    JM::Failure.new(JM::Error.new([], :format))
+  rescue TypeError
+    JM::Failure.new(JM::Error.new([], :type))
   end
 
   def write(date)
-    date.rfc822
+    JM::Success.new(date.rfc822)
   end
 end
 
 mapper = DateMapper.new
 
-mapper.write(Date.new(2014, 8, 13))
+mapper.write(Date.new(2014, 8, 13)).value
 # => "Wed, 13 Aug 2014 00:00:00 +0000"
 
-mapper.read("Wed, 13 Aug 2014 00:00:00 +0000")
+mapper.read("Wed, 13 Aug 2014 00:00:00 +0000").value
 # => #<Date: 2014-08-13 ((2456883j,0s,0n),+0s,2299161j)>
+
+mapper.read("Not a date").errors
+# => [#<JM::Error:0x0055ba2943ea98 @name=:format, @params={}, @path=[]>]
 ```
 
 ### Syncers
 
-Defining a custom syncer is the most general way of pushing data from one
-structure into another and pulling it back.
+Defining a custom syncer is a very general way of synchronizing data between two
+formats. Most commonly one is a ruby object and another is a parsed JSON value,
+normally a JSON object.
 
 ```ruby
 Person = Struct.new(:name, :age)
@@ -229,11 +237,15 @@ class PersonSyncer < JM::Syncer
     hash[:name] = person.name
     hash[:info] ||= {}
     hash[:info][:age] = person.age
+
+    JM::Success.new(hash)
   end
 
   def pull(person, hash)
     person.name = hash[:name]
     person.age = hash[:info][:age]
+
+    JM::Success.new(person)
   end
 end
 

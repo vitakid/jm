@@ -2,25 +2,29 @@ module JM
   module DSL
     # A DSL for composing custom syncers
     #
-    # It is the base for all mappers. At it's heart is the {#syncer} method. It
-    # let's you register a {JM::Syncer}. When writing an object, the object will
-    # be {JM::Syncer#push}ed through all syncers. And when reading an object, it
-    # will be {JM::Syncer#pull}ed through all syncers. So at this central point,
-    # you can register custom syncers to take full control of the mapping
-    # process. Or you could just use one of the DSL methods, that build a thin
-    # layer on top of {#syncer}.
+    # It is the base for all syncers. At it's heart is the {#syncer} method. It
+    # let's you register a {JM::Syncer}. When synchronizing from an object, the
+    # object's data will be {JM::Syncer#push}ed by the registered syncers into
+    # the target. And when synchronizing back, the data will be
+    # {JM::Syncer#pull}ed through by the same syncers back from the target into
+    # the object.
     #
-    # You are supposed to subclass this class, configure your mapper with the
+    # Most of the time you should use the predefined methods to configure your
+    # syncer, for example {#property}. If however your requirements are more
+    # complex than the authors of JM envisioned, you can always resort to
+    # {#syncer} to take full control and implement arbitrary behaviour.
+    #
+    # You are supposed to subclass this class, configure your syncer with the
     # available configuration methods and extend the DSL to fit your mapping
     # processes.
     #
-    # You should notice, that Mappers, in contrast to a lot of other ruby
+    # You should notice, that syncers, in contrast to a lot of other ruby
     # libraries, are configured not with class methods but instance method calls
     # in the constructor. This gives you the possibility to parameterize the
     # configuration of the parent class without going to great lengths and doing
-    # lots of ruby trickery. A simple example would be a parent class for all
-    # mappers for HAL collection resources. In the derived classes you can
-    # easily pass things like URI templates and page numbers via `#super`.
+    # lots of ruby trickery. A simple example would be a parent class for
+    # syncers of HAL collection resources. In the derived classes you can easily
+    # pass things like URI templates and page numbers via `#super`.
     class Syncer < JM::Syncer
       def initialize
         @syncers = []
@@ -59,12 +63,12 @@ module JM
         @syncers << syncer
       end
 
-      # Map a property
+      # Synchronize a property
       #
-      # @example Default mapping
-      #   # Map source.name to hash[:name]
+      # @example Default synchronization
+      #   # Synchronize source.name with hash[:name]
       #   property :name
-      # @example Define an accessor inline
+      # @example Define a source accessor inline
       #   property :name do
       #     get do |source|
       #       # Implement custom getting
@@ -76,9 +80,9 @@ module JM
       #       source.special_write_method(value)
       #     end
       #   end
-      # @param [Symbol] name Property to map
+      # @param [Symbol] name Property to synchronize
       # @param [JM::Accessor] accessor Customize, how the source is accessed
-      # @param [JM::Mapper] mapper Convert the value during mapping
+      # @param [JM::Mapper] mapper Convert the value during synchronization
       # @param [JM::Validator] validator Validate the value
       # @param [Hash] args Other options are passed to {#syncer}
       # @param block Configure the {PropertyBuilder}
@@ -119,7 +123,7 @@ module JM
         property(name, **args)
       end
 
-      # Map an array property
+      # Synchronize an array property
       #
       # @example Map an array of dates to ISO8601 strings
       #   class ISOMapper < JM::Mapper
@@ -133,7 +137,7 @@ module JM
       #   end
       #
       #   array :dates, mapper: ISOMapper.new
-      # @param [Symbol] name Property to map
+      # @param [Symbol] name Property to synchronize
       # @param [JM::Mapper] mapper Mapper for individual array items
       # @param [JM::Validator] validator Validate the whole array
       # @param [JM::Validator] element_validator Validate individual array

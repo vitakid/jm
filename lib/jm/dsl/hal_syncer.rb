@@ -1,6 +1,6 @@
 module JM
   module DSL
-    # An extended DSL with specialized methods for mapping to HAL
+    # A DSL with specialized methods for synchronizing with HAL resources
     class HALSyncer < DSL::Syncer
       def initialize
         super
@@ -8,12 +8,12 @@ module JM
         self.target_factory = Factories::NewFactory.new(Hash)
       end
 
-      # Map all properties to and from string names
+      # Synchronize to and from string names
       def property(name, *args, &block)
         super(name.to_s, *args, &block)
       end
 
-      # Map array properties to and from string names
+      # Synchronize to and from string names
       def array(name, *args, &block)
         super(name.to_s, *args, &block)
       end
@@ -26,13 +26,13 @@ module JM
       #
       # Notice, that the `read` block is not used, when {#pull}ing data in. If
       # you want to instantiate the object from the `self` link, you will have
-      # to do it yourself with `syncer.link_mapper.read(<self link>)` and the
-      # pass that object to {#pull}. The reason for this is, that the general
-      # use case for jm is assumed to be web APIs. So when you are receiving a
-      # PUT request to update some object, the object is determined by the
-      # request URI. If the actually instantiated object was determined by some
-      # URI in the request body, a user could update any object, even if he was
-      # only allowed access to a specific one, and so bypass your authorization.
+      # to do it yourself with `syncer.link_mapper.read(<self link>)` and pass
+      # that object to {#pull}. The reason for this is, that the general use
+      # case for jm is assumed to be web APIs. So when you are receiving a PUT
+      # request to update some object, the object is determined by the request
+      # URI. If the actually instantiated object was determined by some URI in
+      # the request body, a user could update any object, even if he was only
+      # allowed access to a specific one, and so bypass your authorization.
       #
       # @example
       #   self_link "/people/{name}" do
@@ -79,7 +79,7 @@ module JM
         end
       end
 
-      # Link to a resource with an URI template
+      # Link to a resource with an inline URI template
       #
       # @example
       #   inline_link :pet, "/people/{person}/pets/{name}" do
@@ -155,7 +155,7 @@ module JM
 
       # Embed a resource
       #
-      # Embedded resources are write-only be default, so that you don't grant
+      # Embedded resources are write-only by default, so that you do not grant
       # access to objects accidentally.
       #
       # @param [Symbol] rel Link relation
@@ -178,11 +178,11 @@ module JM
 
       # Embed an array of resources
       #
-      # Embedded resources are write-only be default, so that you don't grant
+      # Embedded resources are write-only by default, so that you do not grant
       # access to objects accidentally.
       #
       # @param [Symbol] rel Link relation
-      # @param [JM::Mapper] mapper Mapper the array items
+      # @param [JM::Mapper] mapper Mapper for the array items
       # @param [JM::Accessor] accessor Accessor for the array
       # @param [Hash] args Passed on to {#syncer}
       # @param block Define the accessor and/or item mapper inline

@@ -4,7 +4,7 @@ module JM
     #
     # In general it is very similar to {DSL::Syncer}. It is all based on the
     # {#validator} method, that can be used to directly register
-    # validators. Other methods are in general short hands for {#validator}
+    # validators. Other methods are in general shorthands for {#validator}
     # calls.
     #
     # You are supposed to subclass this class, configure your validator with the
