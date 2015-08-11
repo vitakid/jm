@@ -1,8 +1,10 @@
 module JM
   module DSL
     # Builder for link syncers
-    class LinkBuilder < Builder
-      def initialize(rel, accessor, mapper, default_value = nil)
+    class LinkBuilder < SyncerBuilder
+      def initialize(rel, accessor, mapper, default_value = nil, **args)
+        super(**args)
+
         @rel = rel
         @accessor = accessor
         @mapper = mapper
@@ -20,7 +22,7 @@ module JM
       end
 
       # Create a link syncer from settings
-      def to_syncer
+      def create_syncer
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor

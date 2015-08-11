@@ -1,8 +1,10 @@
 module JM
   module DSL
     # Builder for syncers for embedding objects
-    class EmbeddedBuilder < Builder
-      def initialize(rel, accessor, mapper)
+    class EmbeddedBuilder < SyncerBuilder
+      def initialize(rel, accessor, mapper, **args)
+        super(**args)
+
         @rel = rel
         @accessor = accessor
         @mapper = mapper
@@ -43,7 +45,7 @@ module JM
         @mapper = syncer.to_mapper
       end
 
-      def to_syncer
+      def create_syncer
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor

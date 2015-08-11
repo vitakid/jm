@@ -1,8 +1,10 @@
 module JM
   module DSL
     # Builder for a property syncer
-    class PropertyBuilder < Builder
-      def initialize(name, accessor, validator, mapper)
+    class PropertyBuilder < SyncerBuilder
+      def initialize(name, accessor, validator, mapper, **args)
+        super(**args)
+
         @name = name
         @accessor = accessor
         @validator = validator
@@ -56,7 +58,7 @@ module JM
       # Create a property syncer from the configuration
       #
       # @return [JM::Syncer]
-      def to_syncer
+      def create_syncer
         if @get || @set
           accessor = BlockAccessor.new(@get, @set)
         elsif @accessor

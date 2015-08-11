@@ -37,29 +37,13 @@ module JM
       # methods are built on top of it. So methods like {#property} are actually
       # just shorthands for {#syncer} calls.
       #
-      # Other methods should pass their keyword arguments to {#syncer}, so that
-      # they can be configured to be write-only etc. All built-in methods follow
-      # that principle.
-      #
       # @param [JM::Syncer] syncer
       # @param [true, false] write_only Make the syncer write-only
       # @param [Proc] read_if It is passed the value to read.
       #   Only read, if the lambda evaluates to true
       # @param [Proc] write_if It is passed the value to write.
       #   Only write, if the lambda evaluates to true
-      def syncer(syncer, write_only: false, write_if: nil, read_if: nil)
-        if write_only
-          syncer = Syncers::WriteOnlySyncer.new(syncer)
-        end
-
-        if write_if
-          syncer = Syncers::ConditionalWriteSyncer.new(syncer, write_if)
-        end
-
-        if read_if
-          syncer = Syncers::ConditionalReadSyncer.new(syncer, read_if)
-        end
-
+      def syncer(syncer)
         @syncers << syncer
       end
 
@@ -84,7 +68,7 @@ module JM
       # @param [JM::Accessor] accessor Customize, how the source is accessed
       # @param [JM::Mapper] mapper Convert the value during synchronization
       # @param [JM::Validator] validator Validate the value
-      # @param [Hash] args Other options are passed to {#syncer}
+      # @param [Hash] args Other options are passed to {PropertyBuilder#new}
       # @param block Configure the {PropertyBuilder}
       # @see PropertyBuilder
       def property(name,
@@ -93,10 +77,10 @@ module JM
                    validator: nil,
                    **args,
                    &block)
-        builder = PropertyBuilder.new(name, accessor, validator, mapper)
+        builder = PropertyBuilder.new(name, accessor, validator, mapper, **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, **args)
+        syncer(builder.to_syncer)
       end
 
       # A shorthand to register write-only properties
@@ -142,7 +126,7 @@ module JM
       # @param [JM::Validator] validator Validate the whole array
       # @param [JM::Validator] element_validator Validate individual array
       #   elements
-      # @param [Hash] args Passed on to {#syncer}
+      # @param [Hash] args Passed on to {ArrayBuilder#new}
       # @param block Configure the {ArrayBuilder}
       # @see ArrayBuilder
       def array(name,
@@ -156,10 +140,11 @@ module JM
                                    accessor,
                                    mapper,
                                    validator,
-                                   element_validator)
+                                   element_validator,
+                                   **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, **args)
+        syncer(builder.to_syncer)
       end
 
       # Push the `source` through all registered syncers into `target`

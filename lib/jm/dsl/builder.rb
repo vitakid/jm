@@ -1,11 +1,17 @@
 module JM
   module DSL
-    # A builder object to allow users to configure things with blocks
+    # A builder defines a mini-DSL for configuring the creation of an object
     #
     # The intended use is to subclass this and then pass a user-given block to
-    # it's {#configure}.
+    # {#configure}.
     #
     # @example
+    #   class SomeBuilder < Builder
+    #     def some_setting(value)
+    #       @some_setting = value
+    #     end
+    #   end
+    #
     #   builder = SomeBuilder.new
     #
     #   builder.configure do

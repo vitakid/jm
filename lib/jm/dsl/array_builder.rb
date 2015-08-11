@@ -1,12 +1,15 @@
 module JM
   module DSL
     # Builder for an array syncer
-    class ArrayBuilder < Builder
+    class ArrayBuilder < SyncerBuilder
       def initialize(name,
                      accessor,
                      element_mapper,
                      validator,
-                     element_validator)
+                     element_validator,
+                     **args)
+        super(**args)
+
         @name = name
         @accessor = accessor
         @element_mapper = element_mapper
@@ -74,7 +77,7 @@ module JM
       # Create an array syncer from the configuration
       #
       # @return [JM::Syncer]
-      def to_syncer
+      def create_syncer
         args = {
           source_accessor: build_accessor,
           mapper: build_mapper,

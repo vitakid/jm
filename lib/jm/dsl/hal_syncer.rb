@@ -95,7 +95,7 @@ module JM
       # @param [String] uri_template RFC6570 URI template
       # @param [JM::Accessor] params_accessor Accessor to read template params
       #   from source and write them back
-      # @param [Hash] args Passed on to {#syncer}
+      # @param [Hash] args Passed on to {LinkBuilder#new}
       # @param block Define the params_accessor inline
       # @see LinkBuilder
       def inline_link(rel,
@@ -106,10 +106,11 @@ module JM
                       &block)
         builder = LinkBuilder.new(rel,
                                   params_accessor,
-                                  HAL::LinkMapper.new(uri_template))
+                                  HAL::LinkMapper.new(uri_template),
+                                  **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, **args)
+        syncer(builder.to_syncer)
       end
 
       # Link to a resource by reusing the "self" link of another mapper
@@ -118,7 +119,7 @@ module JM
       # @param [JM::Mapper] mapper Mapper to reuse
       # @param [JM::Accessor] accessor Accessor for the object, that will be
       #   passed to the mapper
-      # @param [Hash] args Passed on to {#syncer}
+      # @param [Hash] args Passed on to {LinkBuilder#new}
       # @param block Define the accessor inline
       # @see LinkBuilder
       def mapper_link(rel,
@@ -127,10 +128,10 @@ module JM
                         Accessors::AccessorAccessor.new(rel),
                       **args,
                       &block)
-        builder = LinkBuilder.new(rel, accessor, mapper.link_mapper)
+        builder = LinkBuilder.new(rel, accessor, mapper.link_mapper, **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, **args)
+        syncer(builder.to_syncer)
       end
 
       # Link to an array of resources
@@ -147,10 +148,11 @@ module JM
                                   accessor,
                                   Mappers::ArrayMapper.new(
                                     mapper.link_mapper),
-                                  [])
+                                  [],
+                                  **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, **args)
+        syncer(builder.to_syncer)
       end
 
       # Embed a resource
@@ -161,7 +163,7 @@ module JM
       # @param [Symbol] rel Link relation
       # @param [JM::Mapper] mapper Mapper for the object
       # @param [JM::Accessor] accessor Accessor for the object
-      # @param [Hash] args Passed on to {#syncer}
+      # @param [Hash] args Passed on to {EmbeddedBuilder#new}
       # @param block Define the accessor and/or mapper inline
       # @see EmbeddedBuilder
       def embedded(rel,
@@ -170,10 +172,11 @@ module JM
                    write_only: true,
                    **args,
                    &block)
-        builder = EmbeddedBuilder.new(rel, accessor, mapper)
+        builder = EmbeddedBuilder.new(rel, accessor, mapper,
+                                      write_only: write_only, **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, write_only: write_only, **args)
+        syncer(builder.to_syncer)
       end
 
       # Embed an array of resources
@@ -184,7 +187,7 @@ module JM
       # @param [Symbol] rel Link relation
       # @param [JM::Mapper] mapper Mapper for the array items
       # @param [JM::Accessor] accessor Accessor for the array
-      # @param [Hash] args Passed on to {#syncer}
+      # @param [Hash] args Passed on to {EmbeddedsBuilder#new}
       # @param block Define the accessor and/or item mapper inline
       # @see EmbeddedBuilder
       def embeddeds(rel,
@@ -195,10 +198,11 @@ module JM
                     &block)
         builder = EmbeddedsBuilder.new(rel,
                                        accessor,
-                                       Mappers::ArrayMapper.new(mapper))
+                                       Mappers::ArrayMapper.new(mapper),
+                                       write_only: write_only, **args)
         builder.configure(&block)
 
-        syncer(builder.to_syncer, write_only: write_only, **args)
+        syncer(builder.to_syncer)
       end
 
       def push(source, target)
