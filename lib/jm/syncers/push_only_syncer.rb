@@ -1,7 +1,7 @@
 module JM
   module Syncers
     # Wraps another syncer and only forwards {#push} calls
-    class WriteOnlySyncer < Syncer
+    class PushOnlySyncer < Syncer
       def initialize(syncer)
         @syncer = syncer
       end

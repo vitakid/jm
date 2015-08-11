@@ -41,9 +41,9 @@ require "jm/accessors/hash_key_accessor"
 
 require "jm/syncer"
 require "jm/syncers/composite_syncer"
-require "jm/syncers/write_only_syncer"
-require "jm/syncers/conditional_read_syncer"
-require "jm/syncers/conditional_write_syncer"
+require "jm/syncers/push_only_syncer"
+require "jm/syncers/conditional_pull_syncer"
+require "jm/syncers/conditional_push_syncer"
 
 require "jm/hal/link_mapper"
 require "jm/hal/link_accessor"

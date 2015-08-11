@@ -157,7 +157,7 @@ module JM
 
       # Embed a resource
       #
-      # Embedded resources are write-only by default, so that you do not grant
+      # Embedded resources are push-only by default, so that you do not grant
       # access to objects accidentally.
       #
       # @param [Symbol] rel Link relation
@@ -169,11 +169,11 @@ module JM
       def embedded(rel,
                    mapper: nil,
                    accessor: Accessors::AccessorAccessor.new(rel),
-                   write_only: true,
+                   push_only: true,
                    **args,
                    &block)
         builder = EmbeddedBuilder.new(rel, accessor, mapper,
-                                      write_only: write_only, **args)
+                                      push_only: push_only, **args)
         builder.configure(&block)
 
         syncer(builder.to_syncer)
@@ -181,7 +181,7 @@ module JM
 
       # Embed an array of resources
       #
-      # Embedded resources are write-only by default, so that you do not grant
+      # Embedded resources are push-only by default, so that you do not grant
       # access to objects accidentally.
       #
       # @param [Symbol] rel Link relation
@@ -193,13 +193,13 @@ module JM
       def embeddeds(rel,
                     mapper: nil,
                     accessor: Accessors::AccessorAccessor.new(rel),
-                    write_only: true,
+                    push_only: true,
                     **args,
                     &block)
         builder = EmbeddedsBuilder.new(rel,
                                        accessor,
                                        Mappers::ArrayMapper.new(mapper),
-                                       write_only: write_only, **args)
+                                       push_only: push_only, **args)
         builder.configure(&block)
 
         syncer(builder.to_syncer)

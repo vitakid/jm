@@ -1,7 +1,7 @@
 module JM
   module Syncers
     # Only forward {#pull} calls to the wrapped syncer, if a condition holds
-    class ConditionalReadSyncer < Syncer
+    class ConditionalPullSyncer < Syncer
       def initialize(syncer, condition)
         @syncer = syncer
         @condition = condition

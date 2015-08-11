@@ -38,11 +38,6 @@ module JM
       # just shorthands for {#syncer} calls.
       #
       # @param [JM::Syncer] syncer
-      # @param [true, false] write_only Make the syncer write-only
-      # @param [Proc] read_if It is passed the value to read.
-      #   Only read, if the lambda evaluates to true
-      # @param [Proc] write_if It is passed the value to write.
-      #   Only write, if the lambda evaluates to true
       def syncer(syncer)
         @syncers << syncer
       end
@@ -83,16 +78,16 @@ module JM
         syncer(builder.to_syncer)
       end
 
-      # A shorthand to register write-only properties
+      # A shorthand to register push-only properties
       #
       # @example
-      #   write_only_property :age do |source|
+      #   push_only_property :age do |source|
       #     Date.today - source.date_of_birth
       #   end
       # @param [Symbol] name Property to map
       # @param [Hash] args Passed on to {#property}
       # @param block Definition for {JM::Accessor#get}
-      def write_only_property(name, **args, &block)
+      def push_only_property(name, **args, &block)
         accessor_class = Class.new(Accessor) do
           define_method(:get) do |object|
             Success.new(block.call(object))
@@ -102,7 +97,7 @@ module JM
         accessor = accessor_class.new
 
         args[:accessor] = accessor
-        args[:write_only] = true
+        args[:push_only] = true
 
         property(name, **args)
       end

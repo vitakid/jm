@@ -3,29 +3,36 @@ module JM
     # A mini-DSL to configure {JM::Syncer}s
     #
     # This lets you configure some generally applicable syncer properties, like
-    # making a syncer write-only.
+    # making a syncer push-only.
     #
     # Subclasses should create their syncer in {#create_syncer}, so that
     # {SyncerBuilder} can wrap it in {#to_syncer}.
     class SyncerBuilder < Builder
-      def initialize(write_only: false, write_if: nil, read_if: nil)
+      def initialize(push_only: false, push_if: nil, pull_if: nil)
         super()
 
-        @write_only = write_only
-        @write_if = write_if
-        @read_if = read_if
+        @push_only = push_only
+        @push_if = push_if
+        @pull_if = pull_if
       end
 
-      def write_only(value = true)
-        @write_only = value
+      # Make the syncer push-only
+      def push_only(value = true)
+        @push_only = value
       end
 
-      def write_if(&block)
-        @write_if = block
+      # Make the syncer push conditionally
+      #
+      # It will only push, if `block` evaluates to something truthy
+      def push_if(&block)
+        @push_if = block
       end
 
-      def read_if(&block)
-        @read_if = block
+      # Make the syncer pull conditionally
+      #
+      # It will only pull, if `block` evaluates to something truthy
+      def pull_if(&block)
+        @pull_if = block
       end
 
       # Create a bare syncer
@@ -42,16 +49,16 @@ module JM
       def to_syncer
         syncer = create_syncer
 
-        if @write_only
-          syncer = Syncers::WriteOnlySyncer.new(syncer)
+        if @push_only
+          syncer = Syncers::PushOnlySyncer.new(syncer)
         end
 
-        if @write_if
-          syncer = Syncers::ConditionalWriteSyncer.new(syncer, @write_if)
+        if @push_if
+          syncer = Syncers::ConditionalPushSyncer.new(syncer, @push_if)
         end
 
-        if @read_if
-          syncer = Syncers::ConditionalReadSyncer.new(syncer, @read_if)
+        if @pull_if
+          syncer = Syncers::ConditionalPullSyncer.new(syncer, @pull_if)
         end
 
         syncer

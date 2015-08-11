@@ -1,7 +1,7 @@
 module JM
   module Syncers
     # Only forward {#push} calls to the wrapped syncer, if a condition holds
-    class ConditionalWriteSyncer < Syncer
+    class ConditionalPushSyncer < Syncer
       def initialize(syncer, condition)
         @syncer = syncer
         @condition = condition

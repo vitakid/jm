@@ -274,7 +274,7 @@ describe JM::DSL::HALSyncer do
         define_method(:initialize) do
           super()
 
-          embedded :pet, mapper: pet_m.new.to_mapper, write_only: false
+          embedded :pet, mapper: pet_m.new.to_mapper, push_only: false
 
           property :name
         end
@@ -304,7 +304,7 @@ describe JM::DSL::HALSyncer do
     end
 
     context "from a hash" do
-      it "should read the embedded pet" do
+      it "should pull the embedded pet" do
         hash = {
           "_embedded" => {
             "pet" => {
@@ -335,7 +335,7 @@ describe JM::DSL::HALSyncer do
         define_method(:initialize) do
           super()
 
-          embedded :pet, write_only: false do
+          embedded :pet, push_only: false do
             mapper do
               self.source_factory = JM::Factories::NewFactory.new(pet_cls)
 
@@ -394,7 +394,7 @@ describe JM::DSL::HALSyncer do
         define_method(:initialize) do
           super()
 
-          embeddeds :pets, mapper: pet_m.new.to_mapper, write_only: false
+          embeddeds :pets, mapper: pet_m.new.to_mapper, push_only: false
 
           property :name
         end
@@ -433,7 +433,7 @@ describe JM::DSL::HALSyncer do
     end
 
     context "from a hash" do
-      it "should read the embedded pet" do
+      it "should pull the embedded pet" do
         hash = {
           "_embedded" => {
             "pets" => [
@@ -471,7 +471,7 @@ describe JM::DSL::HALSyncer do
         define_method(:initialize) do
           super()
 
-          embeddeds :pets, write_only: false do
+          embeddeds :pets, push_only: false do
             mapper do
               self.source_factory = JM::Factories::NewFactory.new(pet_cls)
 
@@ -552,7 +552,7 @@ describe JM::DSL::HALSyncer do
       end
     end
 
-    it "should make them write-only by default" do
+    it "should make them push-only by default" do
       hash = {
         "_embedded" => {
           "favorite" => {
@@ -614,7 +614,7 @@ describe JM::DSL::HALSyncer do
       end
     end
 
-    it "should not write anything" do
+    it "should not push anything" do
       result = person_syncer.new.pull(person_class.new, {})
 
       expect(result).to succeed_with(person_class.new)

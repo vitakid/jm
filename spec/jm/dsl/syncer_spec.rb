@@ -1,5 +1,5 @@
 describe JM::DSL::Syncer do
-  context "when piping simple properties" do
+  context "when synchronizing simple properties" do
     let(:syncer) do
       Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
@@ -37,7 +37,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping a write-only property" do
+  context "when synchronizing a push-only property" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -49,12 +49,12 @@ describe JM::DSL::Syncer do
 
           property :name
 
-          property :age, write_only: true
+          property :age, push_only: true
         end
       end
     end
 
-    it "should write the property" do
+    it "should push the property" do
       person = person_class.new("Frodo", 50)
 
       hash = person_syncer.new.push(person, {})
@@ -62,7 +62,7 @@ describe JM::DSL::Syncer do
       expect(hash).to succeed_with(name: "Frodo", age: 50)
     end
 
-    it "should not read the property" do
+    it "should not pull the property" do
       hash = { name: "Frodo", age: 50 }
 
       person = person_class.new
@@ -72,7 +72,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping a property conditionally" do
+  context "when synchronizing a property conditionally" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -85,14 +85,14 @@ describe JM::DSL::Syncer do
           property :name
 
           property :age,
-                   write_if: -> p { p.age > 18 },
-                   read_if: -> p { p[:age] < 18 }
+                   push_if: -> p { p.age > 18 },
+                   pull_if: -> p { p[:age] < 18 }
         end
       end
     end
 
     context "to a hash" do
-      it "should write the property, if the condition holds" do
+      it "should push the property, if the condition holds" do
         person = person_class.new("Marten", 21)
 
         hash = person_syncer.new.push(person, {})
@@ -100,7 +100,7 @@ describe JM::DSL::Syncer do
         expect(hash).to succeed_with(name: "Marten", age: 21)
       end
 
-      it "should not write the property, if the condition fails" do
+      it "should not push the property, if the condition fails" do
         person = person_class.new("Alex", 7)
 
         hash = person_syncer.new.push(person, {})
@@ -110,7 +110,7 @@ describe JM::DSL::Syncer do
     end
 
     context "from a hash" do
-      it "should read the property, if the condition holds" do
+      it "should pull the property, if the condition holds" do
         hash = { name: "Alex", age: 14 }
 
         result = person_syncer.new.pull(person_class.new, hash)
@@ -118,7 +118,7 @@ describe JM::DSL::Syncer do
         expect(result).to succeed_with(person_class.new("Alex", 14))
       end
 
-      it "should not read the property, if the condition fails" do
+      it "should not pull the property, if the condition fails" do
         hash = { name: "Marten", age: 21 }
 
         result = person_syncer.new.pull(person_class.new, hash)
@@ -128,7 +128,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when using the #write_only_property shorthand" do
+  context "when using the #push_only_property shorthand" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -138,14 +138,14 @@ describe JM::DSL::Syncer do
         define_method(:initialize) do
           super()
 
-          write_only_property :name do |p|
+          push_only_property :name do |p|
             "#{p.name}, #{p.age}"
           end
         end
       end
     end
 
-    it "should write normally" do
+    it "should push normally" do
       person = person_class.new("Marten", 21)
 
       hash = person_syncer.new.push(person, {})
@@ -153,7 +153,7 @@ describe JM::DSL::Syncer do
       expect(hash).to succeed_with(name: "Marten, 21")
     end
 
-    it "should be write-only" do
+    it "should be push-only" do
       hash = { name: "Marten, 21" }
 
       result = person_syncer.new.pull(person_class.new, hash)
@@ -162,7 +162,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping a complex property with an inline accessor" do
+  context "when synchronizing a complex property with an inline accessor" do
     let(:person_class) do
       Struct.new(:name, :age)
     end
@@ -211,7 +211,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping arrays" do
+  context "when synchronizing arrays" do
     let(:person_syncer) do
       person_class = person
 
@@ -291,7 +291,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping a validated property" do
+  context "when synchronizing a validated property" do
     let(:person) do
       Struct.new(:name)
     end
@@ -345,7 +345,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping multiple validated properties" do
+  context "when synchronizing multiple validated properties" do
     let(:person) do
       Struct.new(:name, :age)
     end
@@ -393,13 +393,13 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping an array property with validated elements" do
+  context "when synchronizing an array property with validated elements" do
     let(:container) do
       Struct.new(:numbers)
     end
 
-    let(:number_syncer) do
-      Class.new(JM::Syncer) do
+    let(:number_mapper) do
+      Class.new(JM::Mapper) do
         def read(number)
           if (5..9).include?(number)
             JM::Failure.new(JM::Error.new([], :unwanted_number))
@@ -413,7 +413,7 @@ describe JM::DSL::Syncer do
     end
 
     let(:syncer) do
-      number_m = number_syncer
+      number_m = number_mapper
 
       Class.new(JM::DSL::Syncer) do
         define_method(:initialize) do
@@ -435,7 +435,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping an array property with inline validated elements" do
+  context "when synchronizing an array property with inline validated elements" do
     let(:container) do
       Struct.new(:numbers)
     end
@@ -470,7 +470,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping an array property with an inline validator" do
+  context "when synchronizing an array property with an inline validator" do
     let(:container) do
       Struct.new(:numbers)
     end
@@ -504,7 +504,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when piping an array property with an array validator" do
+  context "when synchronizing an array property with an array validator" do
     let(:container) do
       Struct.new(:numbers)
     end
