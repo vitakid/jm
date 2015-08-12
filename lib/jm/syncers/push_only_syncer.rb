@@ -6,11 +6,11 @@ module JM
         @syncer = syncer
       end
 
-      def push(source, target)
-        @syncer.push(source, target)
+      def push(source, target, options = {}, context = {})
+        @syncer.push(source, target, options, context)
       end
 
-      def pull(source, target)
+      def pull(source, target, options = {}, context = {})
         Success.new(source)
       end
     end

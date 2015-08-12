@@ -7,13 +7,13 @@ module JM
         @condition = condition
       end
 
-      def push(source, target)
-        @syncer.push(source, target)
+      def push(source, target, options = {}, context = {})
+        @syncer.push(source, target, options, context)
       end
 
-      def pull(source, target)
-        if @condition.call(target)
-          @syncer.pull(source, target)
+      def pull(source, target, options = {}, context = {})
+        if @condition.call(target, options, context)
+          @syncer.pull(source, target, options, context)
         else
           Success.new(source)
         end

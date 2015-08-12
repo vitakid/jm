@@ -285,7 +285,7 @@ describe JM::DSL::HALSyncer do
       it "should embed the pet" do
         person = person_class.new("Marten", pet_class.new("Finchen"))
 
-        hash = person_syncer.new.push(person, {})
+        hash = person_syncer.new.push(person, {}, "pet" => true)
 
         resource = {
           "_embedded" => {
@@ -315,7 +315,8 @@ describe JM::DSL::HALSyncer do
           "name" => "Marten"
         }
 
-        person = person_syncer.new.pull(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash,
+                                        "pet" => true)
 
         expected = person_class.new("Marten", pet_class.new("Finchen"))
         expect(person).to succeed_with(expected)
@@ -352,14 +353,17 @@ describe JM::DSL::HALSyncer do
       it "should use the inline syncer" do
         person = person_class.new("Marten", pet_class.new("Finchen"))
 
-        hash = person_syncer.new.push(person, {})
+        hash = person_syncer.new.push(person, {}, "pet" => "true")
 
-        expect(hash).to succeed_with("name" => "Marten",
-                                     "_embedded" => {
-                                       "pet" => {
-                                         "name" => "Finchen"
-                                       }
-                                     })
+        resource = {
+          "name" => "Marten",
+          "_embedded" => {
+            "pet" => {
+              "name" => "Finchen"
+            }
+          }
+        }
+        expect(hash).to succeed_with(resource)
       end
     end
 
@@ -374,7 +378,8 @@ describe JM::DSL::HALSyncer do
           }
         }
 
-        person = person_syncer.new.pull(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash,
+                                        "pet" => true)
 
         expected = person_class.new("Marten", pet_class.new("Finchen"))
         expect(person).to succeed_with(expected)
@@ -406,7 +411,7 @@ describe JM::DSL::HALSyncer do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_syncer.new.push(person, {})
+        hash = person_syncer.new.push(person, {}, "pets" => true)
 
         resource = {
           "_embedded" => {
@@ -450,7 +455,7 @@ describe JM::DSL::HALSyncer do
           "name" => "Marten"
         }
 
-        person = person_syncer.new.pull(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash, "pets" => true)
 
         expected = person_class.new("Marten", [pet_class.new("Finchen"),
                                                pet_class.new("Ronja")])
@@ -489,7 +494,7 @@ describe JM::DSL::HALSyncer do
         person = person_class.new("Marten", [pet_class.new("Finchen"),
                                              pet_class.new("Ronja")])
 
-        hash = person_syncer.new.push(person, {})
+        hash = person_syncer.new.push(person, {}, "pets" => true)
 
         resource = {
           "_embedded" => {
@@ -525,7 +530,7 @@ describe JM::DSL::HALSyncer do
           "name" => "Marten"
         }
 
-        person = person_syncer.new.pull(person_class.new, hash)
+        person = person_syncer.new.pull(person_class.new, hash, "pets" => true)
 
         expected = person_class.new("Marten", [pet_class.new("Finchen"),
                                                pet_class.new("Ronja")])
@@ -578,6 +583,56 @@ describe JM::DSL::HALSyncer do
       person = person_syncer.new.pull(person_class.new, hash)
 
       expect(person).to succeed_with(person_class.new(nil, nil, nil))
+    end
+  end
+
+  context "when using embedding options" do
+    let(:person_class) { Struct.new(:name, :pets) }
+    let(:person_syncer) do
+      person_c = person_class
+      p_syncer = pet_syncer
+
+      Class.new(JM::DSL::HALSyncer) do
+        define_method(:initialize) do
+          super()
+
+          self.source_factory = JM::Factories::NewFactory.new(person_c)
+
+          property :name
+          embeddeds :pets, mapper: p_syncer.new.to_mapper
+        end
+      end
+    end
+
+    let(:community) { Struct.new(:people) }
+    let(:community_syncer) do
+      p_syncer = person_syncer
+
+      Class.new(JM::DSL::HALSyncer) do
+        define_method(:initialize) do
+          super()
+
+          embeddeds :people, mapper: p_syncer.new.to_mapper
+        end
+      end
+    end
+
+    it "pushes only the requested embeddings" do
+      c = community.new([person_class.new("Marten", [pet_class.new("Fini")]),
+                         person_class.new("Maja", [pet_class.new("Ronja")])])
+
+      syncer = community_syncer.new
+      result = syncer.push(c, {}, "people" => true)
+      resource = {
+        "_embedded" => {
+          "people" => [
+            { "name" => "Marten" },
+            { "name" => "Maja" }
+          ]
+        }
+      }
+
+      expect(result).to succeed_with(resource)
     end
   end
 

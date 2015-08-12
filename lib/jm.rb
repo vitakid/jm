@@ -64,6 +64,8 @@ require "jm/dsl/syncer"
 require "jm/dsl/self_link_wrapper"
 require "jm/dsl/template_params_accessor"
 require "jm/dsl/hal_syncer"
+require "jm/dsl/embedded_filter_options"
+require "jm/dsl/embedded_filter"
 
 require "jm/syncers/error_syncer"
 require "jm/syncers/failure_syncer"

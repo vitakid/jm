@@ -11,13 +11,13 @@ module JM
   #
   # @example Syncer, that copies a property to/from a hash
   #   class NameSyncer < JM::Syncer
-  #     def push(person, hash)
+  #     def push(person, hash, *args)
   #       hash[:name] = person.name
   #
   #       Success.new(hash)
   #     end
   #
-  #     def pull(person, hash)
+  #     def pull(person, hash, *args)
   #       person.name = hash[:name]
   #
   #       Success.new(person)
@@ -38,10 +38,26 @@ module JM
     #
     # This SHOULD NOT modify `target`, if it fails.
     #
+    # If a syncer calls other syncers, it may only pass on a subset of the
+    # options. For instance a syncer might take own options as well as options
+    # for a wrapped syncer object and only pass on some of the original options
+    # or it might construct a totally new options object for the wrapped syncer.
+    #
+    # The context should always be passed unmodified and is intended for use in
+    # user-defined hooks, e.g. {SyncerBuilder#write_if}.
+    #
+    # It is important, that neither options nor context are modified in-place,
+    # because a higher-level syncer might reuse these objects.
+    #
     # @param [Object] source Object to read from
     # @param [Object] target Object to write to
+    # @param [Hash] options Additional options
+    #   The specific options available depend on the {Syncer} subclass.
+    # @param [Hash] context A hash of values that define a context for the
+    #   operation. This map could include the requesting user or the query
+    #   parameters.
     # @return [Result] The modified target object
-    def push(source, target)
+    def push(source, target, options = {}, context = {})
       message = "#{self.class.name}#push is not implemented"
 
       raise NotImplementedError.new(message)
@@ -51,10 +67,26 @@ module JM
     #
     # This SHOULD NOT modify `source`, if it fails.
     #
+    # If a syncer calls other syncers, it may only pass on a subset of the
+    # options. For instance a syncer might take own options as well as options
+    # for a wrapped syncer object and only pass on some of the original options
+    # or it might construct a totally new options object for the wrapped syncer.
+    #
+    # The context should always be passed unmodified and is intended for use in
+    # user-defined hooks, e.g. {SyncerBuilder#write_if}.
+    #
+    # It is important, that neither options nor context are modified in-place,
+    # because a higher-level syncer might reuse these objects.
+    #
     # @param [Object] source Object to write to
     # @param [Object] target Object to read from
+    # @param [Hash] options Additional options
+    #   The specific options available depend on the {Syncer} subclass.
+    # @param [Hash] context A hash of values that define a context for the
+    #   operation. This map could include the requesting user or the query
+    #   parameters.
     # @return [Result] The modified source object
-    def pull(source, target)
+    def pull(source, target, options = {}, context = {})
       message = "#{self.class.name}#pull is not implemented"
 
       raise NotImplementedError.new(message)

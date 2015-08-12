@@ -233,7 +233,7 @@ normally a JSON object.
 Person = Struct.new(:name, :age)
 
 class PersonSyncer < JM::Syncer
-  def push(person, hash)
+  def push(person, hash, *args)
     hash[:name] = person.name
     hash[:info] ||= {}
     hash[:info][:age] = person.age
@@ -241,7 +241,7 @@ class PersonSyncer < JM::Syncer
     JM::Success.new(hash)
   end
 
-  def pull(person, hash)
+  def pull(person, hash, *args)
     person.name = hash[:name]
     person.age = hash[:info][:age]
 

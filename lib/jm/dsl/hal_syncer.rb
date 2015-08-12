@@ -205,8 +205,8 @@ module JM
         syncer(builder.to_syncer)
       end
 
-      def push(source, target)
-        result = super(source, target)
+      def push(source, target, options = {}, context = {})
+        result = super(source, target, options, context)
 
         if @link_accessor
           result.map do |object|

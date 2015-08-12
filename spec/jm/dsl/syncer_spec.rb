@@ -85,8 +85,8 @@ describe JM::DSL::Syncer do
           property :name
 
           property :age,
-                   push_if: -> p { p.age > 18 },
-                   pull_if: -> p { p[:age] < 18 }
+                   push_if: -> p, *_ { p.age > 18 },
+                   pull_if: -> p, *_ { p[:age] < 18 }
         end
       end
     end

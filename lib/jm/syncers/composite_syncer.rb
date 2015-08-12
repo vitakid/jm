@@ -12,17 +12,17 @@ module JM
         @target_accessor = target_accessor
       end
 
-      def push(source, target)
+      def push(source, target, options = {}, context = {})
         @source_accessor.get(source).map do |read|
-          @mapper.write(read).map do |mapped|
+          @mapper.write(read, options, context).map do |mapped|
             @target_accessor.set(target, mapped)
           end
         end
       end
 
-      def pull(source, target)
+      def pull(source, target, options = {}, context = {})
         @target_accessor.get(target).map do |read|
-          @mapper.read(read).map do |mapped|
+          @mapper.read(read, options, context).map do |mapped|
             @source_accessor.set(source, mapped)
           end
         end
