@@ -6,19 +6,19 @@ module JM
         @mapper = mapper
       end
 
-      def read(value)
+      def read(value, options = {}, context = {})
         if value.nil?
           JM::Success.new(nil)
         else
-          @mapper.read(value)
+          @mapper.read(value, options, context)
         end
       end
 
-      def write(value)
+      def write(value, options = {}, context = {})
         if value.nil?
           JM::Success.new(nil)
         else
-          @mapper.write(value)
+          @mapper.write(value, options, context)
         end
       end
     end

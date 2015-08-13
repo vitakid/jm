@@ -10,8 +10,8 @@ module JM
         @path = path
       end
 
-      def read(object)
-        result = @mapper.read(object)
+      def read(*args)
+        result = @mapper.read(*args)
 
         case result
         when Success then result
@@ -19,8 +19,8 @@ module JM
         end
       end
 
-      def write(object)
-        result = @mapper.write(object)
+      def write(*args)
+        result = @mapper.write(*args)
 
         case result
         when Success then result

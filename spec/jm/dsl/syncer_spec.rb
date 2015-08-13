@@ -400,7 +400,7 @@ describe JM::DSL::Syncer do
 
     let(:number_mapper) do
       Class.new(JM::Mapper) do
-        def read(number)
+        def read(number, *args)
           if (5..9).include?(number)
             JM::Failure.new(JM::Error.new([], :unwanted_number))
           else

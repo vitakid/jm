@@ -7,11 +7,11 @@ module JM
         @target_class = target_class
       end
 
-      def read(target)
+      def read(*args)
         Success.new(@source_class.new)
       end
 
-      def write(source)
+      def write(*args)
         Success.new(@target_class.new)
       end
     end

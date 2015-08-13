@@ -198,7 +198,7 @@ format.
 
 ```ruby
 class DateMapper < JM::Mapper
-  def read(string)
+  def read(string, *args)
     JM::Success.new(Date.rfc822(string))
   rescue ArgumentError
     JM::Failure.new(JM::Error.new([], :format))
@@ -206,7 +206,7 @@ class DateMapper < JM::Mapper
     JM::Failure.new(JM::Error.new([], :type))
   end
 
-  def write(date)
+  def write(date, *args)
     JM::Success.new(date.rfc822)
   end
 end

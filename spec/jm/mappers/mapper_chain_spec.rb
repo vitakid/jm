@@ -1,11 +1,11 @@
 describe JM::Mappers::MapperChain do
   let(:plus_one_mapper) do
     Class.new(JM::Mapper) do
-      def write(value)
+      def write(value, *args)
         JM::Success.new(value + 1)
       end
 
-      def read(value)
+      def read(value, *args)
         JM::Success.new(value - 1)
       end
     end
@@ -13,11 +13,11 @@ describe JM::Mappers::MapperChain do
 
   let(:failing_mapper) do
     Class.new(JM::Mapper) do
-      def write(value)
+      def write(value, *args)
         JM::Failure.new(JM::Error.new([], :fail))
       end
 
-      def read(value)
+      def read(value, *args)
         JM::Failure.new(JM::Error.new([], :fail))
       end
     end

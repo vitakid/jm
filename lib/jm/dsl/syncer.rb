@@ -106,11 +106,11 @@ module JM
       #
       # @example Map an array of dates to ISO8601 strings
       #   class ISOMapper < JM::Mapper
-      #     def read(iso)
+      #     def read(iso, *args)
       #       Date.iso8601(iso)
       #     end
       #
-      #     def write(date)
+      #     def write(date, *args)
       #       date.iso8601
       #     end
       #   end

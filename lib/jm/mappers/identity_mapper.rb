@@ -5,11 +5,11 @@ module JM
     # This is supposed to be used as a default value in places, where a mapper
     # is expected.
     class IdentityMapper < Mapper
-      def read(object)
+      def read(object, *args)
         Success.new(object)
       end
 
-      def write(object)
+      def write(object, *args)
         Success.new(object)
       end
     end

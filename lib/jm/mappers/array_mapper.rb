@@ -8,17 +8,17 @@ module JM
         @item_mapper = item_mapper
       end
 
-      def read(array)
+      def read(array, options = {}, context = {})
         results = array.map do |item|
-          @item_mapper.read(item)
+          @item_mapper.read(item, options, context)
         end
 
         REDUCER.reduce(results)
       end
 
-      def write(array)
+      def write(array, options = {}, context = {})
         results = array.map do |item|
-          @item_mapper.write(item)
+          @item_mapper.write(item, options, context)
         end
 
         REDUCER.reduce(results)
