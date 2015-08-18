@@ -8,16 +8,16 @@ module JM
         @rel_accessor = Accessors::HashKeyAccessor.new(rel.to_s)
       end
 
-      def get(hash)
-        EMBEDDED_ACCESSOR.get(hash).map do |embedded|
-          @rel_accessor.get(embedded)
+      def get(hash, *args)
+        EMBEDDED_ACCESSOR.get(hash, *args).map do |embedded|
+          @rel_accessor.get(embedded, *args)
         end
       end
 
-      def set(hash, resource)
+      def set(hash, resource, *args)
         hash["_embedded"] ||= {}
 
-        @rel_accessor.set(hash["_embedded"], resource).map do
+        @rel_accessor.set(hash["_embedded"], resource, *args).map do
           Success.new(hash)
         end
       end

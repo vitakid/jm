@@ -160,11 +160,11 @@ an object.
 
 ```ruby
 class NameAccessor < JM::Accessor
-  def get(object)
+  def get(object, *args)
     object.name
   end
 
-  def set(object, name)
+  def set(object, name, *args)
     object.name = name
   end
 end

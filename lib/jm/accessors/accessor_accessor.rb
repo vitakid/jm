@@ -8,7 +8,7 @@ module JM
         @setter = "#{name}=".to_sym
       end
 
-      def get(object)
+      def get(object, *_args)
         if !object.respond_to?(@getter)
           Failure.new(Errors::MissingGetterError.new([], object, @getter))
         else
@@ -16,7 +16,7 @@ module JM
         end
       end
 
-      def set(object, data)
+      def set(object, data, *_args)
         if !object.respond_to?(@setter)
           Failure.new(Errors::MissingSetterError.new([], object, @setter))
         else

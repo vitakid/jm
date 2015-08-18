@@ -7,7 +7,7 @@ module JM
         @default_value = default_value
       end
 
-      def get(hash)
+      def get(hash, *_args)
         if !hash.is_a?(Hash)
           Failure.new(Errors::NotAnObjectError.new([]))
         else
@@ -15,7 +15,7 @@ module JM
         end
       end
 
-      def set(hash, data)
+      def set(hash, data, *_args)
         if !hash.is_a?(Hash)
           Failure.new(Errors::NotAnObjectError.new([]))
         else

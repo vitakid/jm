@@ -12,12 +12,12 @@ module JM
         @set = set
       end
 
-      def get(object)
-        Result.wrap(@get.call(object))
+      def get(*args)
+        Result.wrap(@get.call(*args))
       end
 
-      def set(object, value)
-        Result.wrap(@set.call(object, value))
+      def set(*args)
+        Result.wrap(@set.call(*args))
       end
     end
   end
