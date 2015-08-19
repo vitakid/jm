@@ -160,11 +160,11 @@ an object.
 
 ```ruby
 class NameAccessor < JM::Accessor
-  def get(object)
+  def get(object, *args)
     object.name
   end
 
-  def set(object, name)
+  def set(object, name, *args)
     object.name = name
   end
 end
@@ -198,7 +198,7 @@ format.
 
 ```ruby
 class DateMapper < JM::Mapper
-  def read(string)
+  def read(string, *args)
     JM::Success.new(Date.rfc822(string))
   rescue ArgumentError
     JM::Failure.new(JM::Error.new([], :format))
@@ -206,7 +206,7 @@ class DateMapper < JM::Mapper
     JM::Failure.new(JM::Error.new([], :type))
   end
 
-  def write(date)
+  def write(date, *args)
     JM::Success.new(date.rfc822)
   end
 end
@@ -233,7 +233,7 @@ normally a JSON object.
 Person = Struct.new(:name, :age)
 
 class PersonSyncer < JM::Syncer
-  def push(person, hash)
+  def push(person, hash, *args)
     hash[:name] = person.name
     hash[:info] ||= {}
     hash[:info][:age] = person.age
@@ -241,7 +241,7 @@ class PersonSyncer < JM::Syncer
     JM::Success.new(hash)
   end
 
-  def pull(person, hash)
+  def pull(person, hash, *args)
     person.name = hash[:name]
     person.age = hash[:info][:age]
 

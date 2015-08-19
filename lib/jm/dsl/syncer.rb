@@ -106,11 +106,11 @@ module JM
       #
       # @example Map an array of dates to ISO8601 strings
       #   class ISOMapper < JM::Mapper
-      #     def read(iso)
+      #     def read(iso, *args)
       #       Date.iso8601(iso)
       #     end
       #
-      #     def write(date)
+      #     def write(date, *args)
       #       date.iso8601
       #     end
       #   end
@@ -143,10 +143,10 @@ module JM
       end
 
       # Push the `source` through all registered syncers into `target`
-      def push(source, target)
+      def push(source, target, options = {}, context = {})
         init = [target, Failure.new]
         obj, failure = @syncers.reduce(init) do |(t, f), syncer|
-          res = syncer.push(source, t)
+          res = syncer.push(source, t, options, context)
 
           case res
           when Success then [res.value, f]
@@ -162,10 +162,10 @@ module JM
       end
 
       # Pull the `target` through all registered syncers into `source`
-      def pull(source, target)
+      def pull(source, target, options = {}, context = {})
         init = [source, Failure.new]
         obj, failure = @syncers.reduce(init) do |(s, f), syncer|
-          res = syncer.pull(s, target)
+          res = syncer.pull(s, target, options, context)
 
           case res
           when Success then [res.value, f]

@@ -11,25 +11,25 @@ module JM
         @fallback = fallback
       end
 
-      def write(object)
+      def write(*args)
         if @syncer.link_mapper
-          result = @syncer.link_mapper.write(object)
+          result = @syncer.link_mapper.write(*args)
 
           result.map do |link|
             Success.new("_links" => { "self" => link })
           end
         else
-          @fallback.write(object)
+          @fallback.write(*args)
         end
       end
 
-      def read(resource)
+      def read(resource, *args)
         link = resource.fetch("_links", {}).fetch("self", nil)
 
         if link && @syncer.link_mapper
-          @syncer.link_mapper.read(link)
+          @syncer.link_mapper.read(link, *args)
         else
-          @fallback.read(resource)
+          @fallback.read(resource, *args)
         end
       end
     end

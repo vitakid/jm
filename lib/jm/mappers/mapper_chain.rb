@@ -14,18 +14,18 @@ module JM
         @chain = mappers
       end
 
-      def read(target)
+      def read(target, options = {}, context = {})
         @chain.reverse.reduce(Success.new(target)) do |result, mapper|
           result.map do |value|
-            mapper.read(value)
+            mapper.read(value, options, context)
           end
         end
       end
 
-      def write(source)
+      def write(source, options = {}, context = {})
         @chain.reduce(Success.new(source)) do |result, mapper|
           result.map do |value|
-            mapper.write(value)
+            mapper.write(value, options, context)
           end
         end
       end

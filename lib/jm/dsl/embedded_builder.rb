@@ -64,7 +64,9 @@ module JM
           target_accessor: HAL::EmbeddedAccessor.new(@rel)
         }
 
-        Syncers::CompositeSyncer.new(config)
+        syncer = Syncers::CompositeSyncer.new(config)
+
+        EmbeddedFilter.new(@rel, syncer)
       end
     end
   end

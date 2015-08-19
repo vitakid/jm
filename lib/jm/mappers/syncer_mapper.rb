@@ -6,16 +6,16 @@ module JM
         @syncer = syncer
       end
 
-      def read(object)
+      def read(object, options = {}, context = {})
         source = @syncer.source_factory.create
 
-        @syncer.pull(source, object)
+        @syncer.pull(source, object, options, context)
       end
 
-      def write(object)
+      def write(object, options = {}, context = {})
         target = @syncer.target_factory.create
 
-        @syncer.push(object, target)
+        @syncer.push(object, target, options, context)
       end
     end
   end

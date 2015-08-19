@@ -9,15 +9,15 @@ module JM
         @accessor = accessor
       end
 
-      def get(object)
-        @accessor.get(object).map do |value|
-          @mapper.read(value)
+      def get(object, *args)
+        @accessor.get(object, *args).map do |value|
+          @mapper.read(value, *args)
         end
       end
 
-      def set(object, value)
-        @mapper.write(value).map do |v|
-          @accessor.set(object, v)
+      def set(object, value, *args)
+        @mapper.write(value, *args).map do |v|
+          @accessor.set(object, v, *args)
         end
       end
     end

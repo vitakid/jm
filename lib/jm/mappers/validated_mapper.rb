@@ -15,17 +15,17 @@ module JM
         @target_validator = target_validator
       end
 
-      def read(object)
+      def read(object, options = {}, context = {})
         @target_validator.validate(object).map do |validated|
-          @mapper.read(validated).map do |mapped|
+          @mapper.read(validated, options, context).map do |mapped|
             @source_validator.validate(mapped)
           end
         end
       end
 
-      def write(object)
+      def write(object, options = {}, context = {})
         @source_validator.validate(object).map do |validated|
-          @mapper.write(validated).map do |mapped|
+          @mapper.write(validated, options, context).map do |mapped|
             @target_validator.validate(mapped)
           end
         end

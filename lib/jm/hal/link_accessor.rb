@@ -8,11 +8,11 @@ module JM
         @rel_accessor = Accessors::HashKeyAccessor.new(rel.to_s, default_value)
       end
 
-      def get(hash)
+      def get(hash, *args)
         hash["_links"] ||= {}
 
-        LINKS_ACCESSOR.get(hash).map do |links|
-          result = @rel_accessor.get(links)
+        LINKS_ACCESSOR.get(hash, *args).map do |links|
+          result = @rel_accessor.get(links, *args)
 
           case result
           when Success then result
@@ -21,10 +21,10 @@ module JM
         end
       end
 
-      def set(hash, link)
+      def set(hash, link, *args)
         hash["_links"] ||= {}
 
-        @rel_accessor.set(hash["_links"], link).map do
+        @rel_accessor.set(hash["_links"], link, *args).map do
           Success.new(hash)
         end
       end

@@ -85,8 +85,8 @@ describe JM::DSL::Syncer do
           property :name
 
           property :age,
-                   push_if: -> p { p.age > 18 },
-                   pull_if: -> p { p[:age] < 18 }
+                   push_if: -> p, *_ { p.age > 18 },
+                   pull_if: -> p, *_ { p[:age] < 18 }
         end
       end
     end
@@ -400,7 +400,7 @@ describe JM::DSL::Syncer do
 
     let(:number_mapper) do
       Class.new(JM::Mapper) do
-        def read(number)
+        def read(number, *args)
           if (5..9).include?(number)
             JM::Failure.new(JM::Error.new([], :unwanted_number))
           else
@@ -435,7 +435,7 @@ describe JM::DSL::Syncer do
     end
   end
 
-  context "when synchronizing an array property with inline validated elements" do
+  context "when synchronizing an array property with inline validators" do
     let(:container) do
       Struct.new(:numbers)
     end
