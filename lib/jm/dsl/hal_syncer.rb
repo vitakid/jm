@@ -196,9 +196,7 @@ module JM
                     push_only: true,
                     **args,
                     &block)
-        builder = EmbeddedsBuilder.new(rel,
-                                       accessor,
-                                       Mappers::ArrayMapper.new(mapper),
+        builder = EmbeddedsBuilder.new(rel, accessor, mapper,
                                        push_only: push_only, **args)
         builder.configure(&block)
 
